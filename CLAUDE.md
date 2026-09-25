@@ -158,14 +158,16 @@ the worst place to have a silent mistake.**
 - ProtonVPN real credentials + first real test of the killswitch module,
   including `lanSubnets`
 - First-run in-app setup for Stremio (dedicated account + AIOStreams),
-  FreeTube, jellyfin-mpv-shim, the Arr stack, Tvheadend, and MakeMKV
+  FreeTube, jellyfin-mpv-shim, the Arr stack, Jellyfin Live TV, and MakeMKV
   (README "First-run manual steps")
 - Pin the AIOStreams container image (currently `:latest`)
 - stremio-enhanced → mpv handoff plugin (waiting on Asher to supply the old one)
 - Asher's real mpv config (waiting on Asher to supply it)
 - Fred TV flatpak bypasses mpv-htpc. Check whether it can call the host's mpv
-- Jellyfin plugins for Stremio: Asher mentioned these. What they should be
-  used for hasn't been pinned down yet
+- Low priority: a Jellyfin plugin that exposes the Jellyfin library inside
+  Stremio (e.g. Jellio). Installed from Jellyfin's web UI, so the Nix side is small
+- OTA: Tvheadend was removed from nixpkgs, so `ota-tv` plays the
+  HDHomeRun's own `lineup.m3u` and Jellyfin Live TV handles guide/DVR
 - Jellyfin: jellyfin-mpv-shim is cast-only. Is a couch-browsable client wanted?
 - `hosts/htpc/hardware-configuration.nix` is still a placeholder — needs
   `nixos-generate-config` run on the real HTPC

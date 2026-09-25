@@ -50,7 +50,7 @@ modules/
   media/iptv.nix                   services.htpc.media.iptv.enable — M3U playlist -> mpv-htpc
   media/youtube.nix                services.htpc.media.youtube.enable — FreeTube + SponsorBlock
   media/dvd.nix                    services.htpc.media.dvd.{play,rip}.enable
-  media/ota.nix                    services.htpc.media.ota.enable — HDHomeRun + Tvheadend
+  media/ota.nix                    services.htpc.media.ota.enable — HDHomeRun lineup -> mpv-htpc
   media/gaming.nix                 services.htpc.gaming.{steam,moonlight}.enable
   system/fake-hwclock.nix          services.htpc.system.fakeHwclock.enable — clock save/restore for dead-RTC hardware
   network/protonvpn.nix            services.htpc.network.protonvpn.enable — declarative WireGuard + nftables killswitch
@@ -124,7 +124,7 @@ To turn it on:
 The killswitch only allows: loopback, established/related connections, DHCP,
 the initial handshake to the VPN endpoint itself, `lanSubnets`, and anything
 over the `protonvpn` interface. `lanSubnets` is what lets Moonlight reach
-Balthasar, other devices reach Jellyfin, and Tvheadend reach the HDHomeRun —
+Balthasar, other devices reach Jellyfin, and this box reach the HDHomeRun —
 without it, the killswitch blocks the LAN too. No blanket NTP exception —
 `fake-hwclock` is what removes the need for one. If it's ever insufficient
 on its own, add a narrow `udp dport 123 ip daddr <server> accept` line to
@@ -146,8 +146,10 @@ declare. Each module has a comment with details; the short list:
 - **jellyfin-mpv-shim**: `mpv_ext: true`, `mpv_ext_path` → `mpv-htpc` in its `conf.json`.
 - **Arr stack**: connect Prowlarr → Sonarr/Radarr, add Transmission as the
   download client, set root folders under `/srv/media`.
-- **Tvheadend** (`:9981`): add the HDHomeRun, scan, map channels, allow
-  anonymous streaming from localhost.
+- **OTA TV**: `ota-tv` works as soon as the tuner has scanned channels. For
+  guide/DVR, add the HDHomeRun in Jellyfin (Dashboard → Live TV). With the
+  VPN on, set `services.htpc.media.ota.tunerAddress` — discovery is broadcast
+  and the killswitch blocks it.
 - **MakeMKV**: enter the beta key (Help → Register).
 
 ## Using this repo without forking it
