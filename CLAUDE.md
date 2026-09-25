@@ -110,10 +110,25 @@ every module is gated behind its own `services.htpc.*.enable` option rather
 than being unconditionally imported — cheap to import, inert unless
 switched on.
 
-**stremio-enhanced is not officially packaged for Nix anywhere.** Confirmed
-the old HTPC config pulls it from a third-party flake repo, not nixpkgs.
-Not yet decided whether to port that third-party input or drop back to
-plain `stremio` (already in nixpkgs).
+**stremio-enhanced comes from a third-party flake.** It isn't packaged in
+nixpkgs. Decided 2026-09-25: port the old config's source,
+`github:Rishabh5321/custom-packages-flake` (the `custom-packages` input,
+following our nixpkgs, with no binary cache). `stremio.nix` has a `package`
+option that defaults to plain `pkgs.stremio`. Only the host swaps in
+stremio-enhanced, so the module doesn't depend on the input. The old setup
+also has a custom Stremio plugin that hands stremio-enhanced playback to
+mpv. Asher will supply it; port it and point it at mpv-htpc.
+
+**Fred TV is a flatpak** (`dev.fredol.open-tv`, Fredolx's Open TV). It isn't
+in nixpkgs, so it's installed with nix-flatpak, declared in
+`hosts/htpc/default.nix`. It can't go in `iptv.nix`, because the flatpak
+options only exist when nix-flatpak is imported and the reusable modules
+must work without it. Known gap: the flatpak bundles its own sandboxed mpv,
+so it bypasses mpv-htpc. The `iptv` launcher is the fallback that goes
+through mpv-htpc.
+
+**Asher has his own mpv config** to supply. It has per-resolution and
+per-colourspace shader profiles, and it goes in `files/mpv/`.
 
 ## allowUnfree bug (found 2026-09-23 via `nix flake check`, fix committed 2026-09-25)
 
@@ -146,13 +161,14 @@ the worst place to have a silent mistake.**
   FreeTube, jellyfin-mpv-shim, the Arr stack, Tvheadend, and MakeMKV
   (README "First-run manual steps")
 - Pin the AIOStreams container image (currently `:latest`)
-- stremio-enhanced: port the third-party input, or drop it for plain stremio
-- IPTV: Fred TV is Apple-only. Is plain mpv playlist playback enough, or is
-  a guide-style client wanted?
+- stremio-enhanced → mpv handoff plugin (waiting on Asher to supply the old one)
+- Asher's real mpv config (waiting on Asher to supply it)
+- Fred TV flatpak bypasses mpv-htpc. Check whether it can call the host's mpv
+- Jellyfin plugins for Stremio: Asher mentioned these. What they should be
+  used for hasn't been pinned down yet
 - Jellyfin: jellyfin-mpv-shim is cast-only. Is a couch-browsable client wanted?
 - `hosts/htpc/hardware-configuration.nix` is still a placeholder — needs
   `nixos-generate-config` run on the real HTPC
-- Real mpv shader/HDR config not yet ported into `files/mpv/`
 - Nothing has been rebuilt/booted on the actual HTPC yet
 
 ## Working conventions established so far

@@ -15,9 +15,21 @@
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # Third-party packages not in nixpkgs — here for stremio-enhanced (same
+    # source the old HTPC config used). No binary cache, and following our
+    # nixpkgs means it builds locally either way.
+    custom-packages = {
+      url = "github:Rishabh5321/custom-packages-flake";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    # Declarative flatpaks (plain NixOS can only enable flatpak, not choose
+    # which apps are installed). Here for Fred TV, which isn't in nixpkgs.
+    nix-flatpak.url = "github:gmodena/nix-flatpak/?ref=latest";
   };
 
-  outputs = { self, nixpkgs, home-manager, sops-nix, ... }@inputs:
+  outputs = { self, nixpkgs, home-manager, sops-nix, nix-flatpak, ... }@inputs:
     let
       system = "x86_64-linux";
       # No `pkgs` binding here on purpose: lib.nixosSystem builds its own pkgs
@@ -49,6 +61,7 @@
             ./hosts/htpc/default.nix
             home-manager.nixosModules.home-manager
             sops-nix.nixosModules.sops
+            nix-flatpak.nixosModules.nix-flatpak
             {
               home-manager.useGlobalPkgs = true;
               home-manager.useUserPackages = true;

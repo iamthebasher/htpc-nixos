@@ -9,6 +9,17 @@ in
   options.services.htpc.media.stremio = {
     enable = mkEnableOption "Stremio client, configured to hand off playback to mpv-htpc";
 
+    package = mkOption {
+      type = types.package;
+      default = pkgs.stremio;
+      defaultText = literalExpression "pkgs.stremio";
+      description = ''
+        Stremio build to install. The HTPC host swaps in stremio-enhanced
+        from a third-party flake (it isn't in nixpkgs); this module stays
+        free of that input so it's reusable with plain nixpkgs.
+      '';
+    };
+
     addonUrl = mkOption {
       type = types.nullOr types.str;
       default = null;
@@ -31,11 +42,11 @@ in
       }
     ];
 
-    environment.systemPackages = [ pkgs.stremio ];
+    environment.systemPackages = [ cfg.package ];
 
-    # Stremio's "external player" setting must be pointed at mpv-htpc by hand
-    # in-app (Settings -> Player -> External player command) the first time
-    # it's launched — there's no config-file toggle nixpkgs exposes for this
-    # yet. Point it at: ${config.services.htpc.media.mpv.package}/bin/mpv-htpc
+    # Plain Stremio: point Settings -> Player -> External player at
+    # /run/current-system/sw/bin/mpv-htpc by hand on first launch.
+    # stremio-enhanced: TODO — the old setup hands playback to mpv via a
+    # custom plugin; port it here (and point it at mpv-htpc) once available.
   };
 }

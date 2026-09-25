@@ -180,11 +180,12 @@ differently, adjust those — hasn't been made configurable yet.
 ## Still open
 
 - Everything above is roughed in, not tested — first real build/boot pending
-- stremio-enhanced: the old config pulls it from a third-party flake (no
-  official Nix packaging exists). Port that input, or stay on plain `stremio`
+- stremio-enhanced (from the `custom-packages` flake input) → mpv handoff:
+  port the old setup's custom plugin, pointed at `mpv-htpc`
+- Real mpv config (per-resolution/colourspace shader profiles) → `files/mpv/`
 - AIOStreams image is `:latest` — pin a release once it's running
-- IPTV: Fred TV is Apple-only; decide whether plain mpv playlist playback is
-  enough or a guide-style client (e.g. Hypnotix) is wanted
+- IPTV: Fred TV is a flatpak with its own sandboxed mpv, so it bypasses
+  `mpv-htpc`. See if it can be pointed at the host's `mpv-htpc`
 - Jellyfin: jellyfin-mpv-shim is cast-only; decide whether a couch-browsable
   client is wanted too
 - DVD: rips land in `/srv/media/dvd-rips` and are moved by hand — automate later?

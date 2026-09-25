@@ -27,10 +27,10 @@ in
     };
   };
 
-  # NOTE: Fred TV (the old setup's IPTV app) is Apple-only, so there's no
-  # direct port. mpv playing the M3U works but channel switching is just
-  # playlist next/prev. TODO: decide whether that's enough or whether a
-  # guide-style Linux client (e.g. Hypnotix) is worth adding on top.
+  # A minimal mpv-htpc path for IPTV: channel switching is just playlist
+  # next/prev, no guide. The HTPC host uses Fred TV (flatpak, declared in
+  # hosts/htpc/default.nix) as the main IPTV app; this launcher is the
+  # fallback that does go through the shared shader config.
   config = mkIf cfg.enable {
     assertions = [
       {

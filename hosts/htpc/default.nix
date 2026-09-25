@@ -21,7 +21,10 @@
 
     media = {
       mpv.enable = true;
-      stremio.enable = true;
+      stremio = {
+        enable = true;
+        package = inputs.custom-packages.packages.${pkgs.stdenv.hostPlatform.system}.stremio-enhanced;
+      };
       aiostreams.enable = true;
 
       arr = {
@@ -40,7 +43,8 @@
       };
       ota.enable = true; # assumes an HDHomeRun on the LAN — turn off if there isn't one yet
 
-      # iptv.enable is set in ./secrets.nix — it needs the playlist URL secret
+      # iptv.enable (the `iptv` mpv launcher) is set in ./secrets.nix — it
+      # needs the playlist URL secret. Fred TV, the main IPTV app, is below.
     };
 
     gaming = {
@@ -51,6 +55,17 @@
     system.fakeHwclock.enable = true;
 
     # network.protonvpn.enable is set in ./secrets.nix — it needs the private key secret
+  };
+
+  # Fred TV (Open TV) for IPTV — flathub only, not in nixpkgs. Installed
+  # declaratively by nix-flatpak; the playlist is added in-app.
+  # Caveat: the flatpak bundles its own mpv inside the sandbox, so it does
+  # NOT go through mpv-htpc / files/mpv shaders. TODO: check whether Fred
+  # TV's mpv settings can reach the host mpv-htpc (flatpak-spawn --host),
+  # or accept that IPTV is the one source outside the shared pipeline.
+  services.flatpak = {
+    enable = true;
+    packages = [ "dev.fredol.open-tv" ];
   };
 
   # nvidia drivers, steam, etc. Must be set as a module option — see the
