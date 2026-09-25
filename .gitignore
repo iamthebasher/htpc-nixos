@@ -1,0 +1,6 @@
+# Personal credentials/URLs (VPN keys, Stremio addon URL) — never commit
+hosts/htpc/local.nix
+
+# nix build output symlinks
+result
+result-*

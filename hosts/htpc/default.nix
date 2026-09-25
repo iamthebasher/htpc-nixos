@@ -43,6 +43,10 @@
     # once real WireGuard credentials exist. See README / modules/network/protonvpn.nix.
   };
 
+  # nvidia drivers, steam, etc. Must be set as a module option — see the
+  # comment in flake.nix's let block for why it can't live there.
+  nixpkgs.config.allowUnfree = true;
+
   networking.hostName = "htpc";
   time.timeZone = "America/New_York"; # adjust if this ever isn't true
 

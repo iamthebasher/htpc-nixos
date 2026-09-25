@@ -13,10 +13,10 @@
   outputs = { self, nixpkgs, home-manager, ... }@inputs:
     let
       system = "x86_64-linux";
-      pkgs = import nixpkgs {
-        inherit system;
-        config.allowUnfree = true; # nvidia drivers, steam, etc.
-      };
+      # No `pkgs` binding here on purpose: lib.nixosSystem builds its own pkgs
+      # from the module system's nixpkgs.config, so allowUnfree set on a pkgs
+      # in this let block never reaches the system. It lives in
+      # hosts/htpc/default.nix instead.
     in
     {
       # The reusable half of this repo — every services.htpc.* option-gated
