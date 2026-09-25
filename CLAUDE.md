@@ -166,8 +166,11 @@ the worst place to have a silent mistake.**
 - Fred TV flatpak bypasses mpv-htpc. Check whether it can call the host's mpv
 - Low priority: a Jellyfin plugin that exposes the Jellyfin library inside
   Stremio (e.g. Jellio). Installed from Jellyfin's web UI, so the Nix side is small
-- OTA: Tvheadend was removed from nixpkgs, so `ota-tv` plays the
-  HDHomeRun's own `lineup.m3u` and Jellyfin Live TV handles guide/DVR
+- OTA: disabled, no tuner owned yet. Undecided between an HDHomeRun (about
+  $80 used to $170. Network tuner that can sit upstairs by the router; works
+  as-is with `ota-tv` and Jellyfin Live TV) and a USB tuner (about $30–40.
+  Needs a TV backend run as a container, since nixpkgs removed Tvheadend).
+  Picture quality is identical either way. If USB wins, ota.nix needs rework
 - Jellyfin: jellyfin-mpv-shim is cast-only. Is a couch-browsable client wanted?
 - `hosts/htpc/hardware-configuration.nix` is still a placeholder — needs
   `nixos-generate-config` run on the real HTPC
