@@ -41,7 +41,7 @@
         play.enable = true;
         rip.enable = true;
       };
-      ota.enable = true; # assumes an HDHomeRun on the LAN — turn off if there isn't one yet
+      ota.enable = false; # no tuner yet — flip on once an HDHomeRun is on the LAN
 
       # iptv.enable (the `iptv` mpv launcher) is set in ./secrets.nix — it
       # needs the playlist URL secret. Fred TV, the main IPTV app, is below.
