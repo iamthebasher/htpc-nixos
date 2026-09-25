@@ -1,6 +1,8 @@
-# Personal credentials/URLs (VPN keys, Stremio addon URL) — never commit
-hosts/htpc/local.nix
-
 # nix build output symlinks
 result
 result-*
+
+# age private keys — only public keys (in .sops.yaml) belong in the repo.
+# secrets/*.yaml IS committed: it's encrypted.
+*.agekey
+keys.txt

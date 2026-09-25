@@ -12,11 +12,13 @@ in
     addonUrl = mkOption {
       type = types.nullOr types.str;
       default = null;
-      example = "http://homelab.local:11470/manifest.json";
+      example = "http://localhost:3000/stremio/<uuid>/<config>/manifest.json";
       description = ''
         Manifest URL of a self-hosted AIOStreams instance (or any other addon
-        endpoint). Left null by default so this repo carries no personal
-        infra details — set it in your own host config, not here.
+        endpoint). Informational only for now — nothing reads it yet, since
+        Stremio addons are installed per-account in-app, not via config
+        files. AIOStreams manifest URLs embed a per-user config token, so
+        don't commit a real one.
       '';
     };
   };

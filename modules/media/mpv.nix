@@ -9,8 +9,10 @@ let
   # instead of raw `mpv`. This is the architectural point of this module:
   # shaders/HDR/interpolation config lives in exactly one place, so every
   # source (Stremio, IPTV, YouTube, OTA, DVD playback) stays in sync for free.
+  mpvPkg = pkgs.mpv.override { scripts = cfg.scripts; };
+
   mpvHtpc = pkgs.writeShellScriptBin "mpv-htpc" ''
-    exec ${pkgs.mpv}/bin/mpv \
+    exec ${mpvPkg}/bin/mpv \
       --config-dir=${cfg.configDir} \
       ${escapeShellArgs cfg.extraFlags} \
       "$@"
@@ -37,10 +39,21 @@ in
       example = [ "--hwdec=nvdec" "--fullscreen" ];
       description = "Extra flags appended to every mpv-htpc invocation.";
     };
+
+    scripts = mkOption {
+      type = types.listOf types.package;
+      default = [ ];
+      example = literalExpression "[ pkgs.mpvScripts.sponsorblock ]";
+      description = ''
+        mpv script packages baked into mpv-htpc. Source modules append to
+        this (e.g. youtube.nix adds SponsorBlock) instead of wrapping their
+        own mpv. Hand-written .lua scripts can still go in configDir/scripts.
+      '';
+    };
   };
 
   config = mkIf cfg.enable {
-    environment.systemPackages = [ mpvHtpc pkgs.mpv ];
+    environment.systemPackages = [ mpvHtpc mpvPkg ];
   };
 
   # Exposed so other modules (stremio.nix, iptv.nix, etc.) can reference the

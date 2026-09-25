@@ -1,0 +1,15 @@
+# Which age keys can decrypt which secrets files. Replace both placeholders:
+#   asher — your personal key, so you can edit secrets from any machine
+#           (`age-keygen -o ~/.config/sops/age/keys.txt`, use the "public key" line)
+#   htpc  — the HTPC's own key (/var/lib/sops-nix/key.txt, see hosts/htpc/secrets.nix)
+# After changing recipients on an existing file: `sops updatekeys secrets/htpc.yaml`
+keys:
+  - &asher age1REPLACE-ME-personal-public-key
+  - &htpc age1REPLACE-ME-htpc-public-key
+
+creation_rules:
+  - path_regex: secrets/htpc\.yaml$
+    key_groups:
+      - age:
+          - *asher
+          - *htpc

@@ -8,9 +8,16 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # Encrypted secrets committed to the repo, decrypted at activation into
+    # /run/secrets. See .sops.yaml and hosts/htpc/secrets.nix.
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, home-manager, ... }@inputs:
+  outputs = { self, nixpkgs, home-manager, sops-nix, ... }@inputs:
     let
       system = "x86_64-linux";
       # No `pkgs` binding here on purpose: lib.nixosSystem builds its own pkgs
@@ -27,17 +34,9 @@
       # flags in their own host config — same as hosts/htpc/default.nix does
       # below, just from outside this repo. Nothing in here is specific to
       # this machine (no hostname, timezone, users, hardware-configuration).
-      nixosModules.default = {
-        imports = [
-          ./modules/hardware/nvidia.nix
-          ./modules/desktop/bigscreen.nix
-          ./modules/media/mpv.nix
-          ./modules/media/stremio.nix
-          ./modules/media/gaming.nix
-          ./modules/system/fake-hwclock.nix
-          ./modules/network/protonvpn.nix
-        ];
-      };
+      # The module list itself lives in modules/default.nix so this and
+      # hosts/htpc/default.nix import the exact same set.
+      nixosModules.default = import ./modules;
 
       # The concrete half — this actual machine. Not meant to be imported by
       # anyone else; it's the "instance" that uses nixosModules.default above,
@@ -49,6 +48,7 @@
           modules = [
             ./hosts/htpc/default.nix
             home-manager.nixosModules.home-manager
+            sops-nix.nixosModules.sops
             {
               home-manager.useGlobalPkgs = true;
               home-manager.useUserPackages = true;

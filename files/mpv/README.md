@@ -22,11 +22,3 @@ SVP-based interpolation setup — see the `htpc-pipeline` notes. If that
 swap happens, it changes what belongs in `mpv.conf` vs. an external
 frame-generation layer sitting in front of mpv entirely, so hold off
 finalizing this directory's interpolation settings until that's decided.
-
-## Not yet wired to real content
-
-`hosts/htpc/default.nix` leaves `services.htpc.media.stremio.addonUrl`
-unset — that's your self-hosted AIOStreams manifest URL and shouldn't be
-committed to a repo meant to be published. Set it in a local override file
-(e.g. `hosts/htpc/local.nix`, imported but gitignored) once that instance
-exists.

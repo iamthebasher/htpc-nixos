@@ -4,6 +4,12 @@ with lib;
 
 let
   cfg = config.services.htpc.network.protonvpn;
+
+  # endpoint is "IPv4:port" — nftables needs a literal IP (no hostnames:
+  # there's no DNS before the tunnel is up anyway)
+  endpointIp = elemAt (splitString ":" cfg.endpoint) 0;
+  endpointPort = elemAt (splitString ":" cfg.endpoint) 1;
+  lanSet = concatStringsSep ", " cfg.lanSubnets;
 in
 {
   options.services.htpc.network.protonvpn = {
@@ -24,9 +30,9 @@ in
       example = "/run/secrets/protonvpn-private-key";
       description = ''
         Path to a file containing ONLY the WireGuard private key from
-        ProtonVPN's config export. Never commit the key itself — this should
-        point at a sops-nix/agenix secret, or at minimum a root-only file
-        outside the repo. Left unset here on purpose.
+        ProtonVPN's config export. Never commit the key itself — point this
+        at a sops-nix/agenix secret (hosts/htpc/secrets.nix does this with
+        sops-nix), or at minimum a root-only file outside the repo.
       '';
     };
 
@@ -46,13 +52,26 @@ in
       default = [ "10.2.0.1" ]; # ProtonVPN's in-tunnel resolver from their config export
       description = "DNS servers to use while the tunnel is up (prevents DNS leaks outside it).";
     };
+
+    lanSubnets = mkOption {
+      type = types.listOf types.str;
+      default = [ ];
+      example = [ "192.168.1.0/24" ];
+      description = ''
+        IPv4 LAN ranges allowed in and out outside the tunnel. Without this,
+        the killswitch blocks everything local too: Moonlight to Balthasar,
+        phones reaching Jellyfin/Arr web UIs, the HDHomeRun tuner, Steam
+        Remote Play. Keep it to your actual LAN — anything listed here
+        bypasses the VPN.
+      '';
+    };
   };
 
   config = mkIf cfg.enable {
     assertions = [
       {
         assertion = cfg.privateKeyFile != null;
-        message = "services.htpc.network.protonvpn.privateKeyFile must point at a real secret — set this in a local/untracked host override, not committed to the repo.";
+        message = "services.htpc.network.protonvpn.privateKeyFile must point at a real secret (e.g. a sops-nix secret path), never a key committed to the repo.";
       }
     ];
 
@@ -89,9 +108,10 @@ in
           ct state established,related accept
 
           # allow the initial WireGuard handshake to the VPN server
-          ip daddr ${elemAt (splitString ":" cfg.endpoint) 0} udp dport ${elemAt (splitString ":" cfg.endpoint) 1} accept
+          ip daddr ${endpointIp} udp dport ${endpointPort} accept
 
           udp dport { 67, 68 } accept  # DHCP
+          ${optionalString (cfg.lanSubnets != [ ]) "ip daddr { ${lanSet} } accept  # LAN"}
 
           oifname "protonvpn" accept
         }
@@ -103,6 +123,7 @@ in
           ct state established,related accept
 
           udp sport { 67, 68 } accept  # DHCP
+          ${optionalString (cfg.lanSubnets != [ ]) "ip saddr { ${lanSet} } accept  # LAN"}
 
           iifname "protonvpn" accept
         }

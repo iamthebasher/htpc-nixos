@@ -21,28 +21,77 @@ hardware:
    time (disk UUIDs, detected kernel modules).
 2. Adjust `hosts/htpc/default.nix`: timezone, hostname if different,
    `system.stateVersion` to match whatever release you actually install
-   from (never change it after the first rebuild).
+   from (never change it after the first rebuild), and turn off any
+   `services.htpc.*` toggles for hardware you don't have (e.g. `ota`).
 3. Port real mpv config into `files/mpv/` — see `files/mpv/README.md`.
-4. `sudo nixos-rebuild switch --flake .#htpc`
+4. Set up secrets — see [Secrets setup](#secrets-setup-sops-nix).
+5. `sudo nixos-rebuild switch --flake .#htpc`
 
 ## Layout
 
 ```
 flake.nix                          inputs + nixosModules.default + nixosConfigurations.htpc
+.sops.yaml                         which age keys can decrypt which secrets file
+secrets/htpc.yaml                  encrypted secrets (create it — see Secrets setup)
 hosts/htpc/
   default.nix                      host glue — imports modules, sets services.htpc.* toggles
+  secrets.nix                      sops secrets + the modules that need them (VPN, IPTV)
   hardware-configuration.nix       PLACEHOLDER, regenerate on target hardware
 modules/
+  default.nix                      the full module list (used by the host and nixosModules.default)
   hardware/nvidia.nix              services.htpc.hardware.nvidia.enable
   desktop/bigscreen.nix            services.htpc.desktop.bigscreen.enable
   media/mpv.nix                    services.htpc.media.mpv.enable — the shared wrapper
+  media/library.nix                services.htpc.media.library.{dir,group} — shared /srv/media + group
   media/stremio.nix                services.htpc.media.stremio.enable
+  media/aiostreams.nix             services.htpc.media.aiostreams.enable — self-hosted addon (container)
+  media/arr.nix                    services.htpc.media.arr.enable — Sonarr/Radarr/Prowlarr/Transmission (+Bazarr)
+  media/jellyfin.nix               services.htpc.media.jellyfin.{server,client}.enable
+  media/iptv.nix                   services.htpc.media.iptv.enable — M3U playlist -> mpv-htpc
+  media/youtube.nix                services.htpc.media.youtube.enable — FreeTube + SponsorBlock
+  media/dvd.nix                    services.htpc.media.dvd.{play,rip}.enable
+  media/ota.nix                    services.htpc.media.ota.enable — HDHomeRun + Tvheadend
   media/gaming.nix                 services.htpc.gaming.{steam,moonlight}.enable
   system/fake-hwclock.nix          services.htpc.system.fakeHwclock.enable — clock save/restore for dead-RTC hardware
   network/protonvpn.nix            services.htpc.network.protonvpn.enable — declarative WireGuard + nftables killswitch
 home/default.nix                   home-manager module (imported as a NixOS module, one rebuild does both)
 files/mpv/                         mpv config dir referenced by modules/media/mpv.nix
 ```
+
+## Secrets setup (sops-nix)
+
+Secrets are committed to the repo *encrypted* (`secrets/htpc.yaml`) and
+decrypted at activation into `/run/secrets/<name>`. Modules only ever
+receive the file path, never the value, so nothing secret lands in the Nix
+store. Anything a module needs as a plain string at evaluation time (like
+the VPN endpoint IP) can't be a sops secret — those are ordinary values in
+`hosts/htpc/secrets.nix`.
+
+One-time setup:
+
+1. **Your personal age key** (on whatever machine you edit secrets from):
+   ```
+   mkdir -p ~/.config/sops/age
+   age-keygen -o ~/.config/sops/age/keys.txt
+   ```
+   Put the printed public key (`age1...`) in `.sops.yaml` as `asher`.
+2. **The HTPC's key** (on the HTPC):
+   ```
+   sudo mkdir -p /var/lib/sops-nix
+   sudo age-keygen -o /var/lib/sops-nix/key.txt
+   ```
+   Put its public key in `.sops.yaml` as `htpc`.
+3. **Create the secrets file** — `sops secrets/htpc.yaml` opens an editor;
+   write plain YAML and sops encrypts on save:
+   ```yaml
+   protonvpn-private-key: <PrivateKey from ProtonVPN's WireGuard export>
+   iptv-playlist-url: <full M3U URL from your IPTV provider>
+   ```
+4. Fill in the `REPLACE-ME` values in `hosts/htpc/secrets.nix`, uncomment
+   `./secrets.nix` in `hosts/htpc/default.nix`, and `git add` the new
+   files (flakes only see files git tracks).
+
+Keep backups of both private keys. Losing both means re-creating every secret.
 
 ## VPN setup (ProtonVPN via WireGuard, replacing the flatpak app)
 
@@ -62,38 +111,44 @@ boot, before the VPN handshake or timesyncd run — no killswitch exception
 needed, no dependency on the RTC hardware being healthy. Replacing the CMOS
 battery is still worth doing, but this means you're not blocked on it.
 
-To actually turn the VPN module on:
+To turn it on:
 
 1. Get a WireGuard config from ProtonVPN's account dashboard (config
-   generator, not the app) — from it, you need `PrivateKey`, the peer's
-   `PublicKey`, `Endpoint`, and your `Address`.
-2. Save the private key to its own file, outside the repo (or behind
-   sops-nix/agenix once that's set up), e.g. `/etc/nixos-secrets/protonvpn-key`.
-3. Create `hosts/htpc/local.nix` (gitignored, auto-imported if present):
-   ```nix
-   { ... }:
-   {
-     services.htpc.network.protonvpn = {
-       enable = true;
-       interfaceAddress = "10.2.0.2/32";       # from the config export
-       privateKeyFile = "/etc/nixos-secrets/protonvpn-key";
-       peerPublicKey = "...";                   # from the config export
-       endpoint = "146.70.xxx.xxx:51820";       # from the config export
-     };
-   }
-   ```
+   generator, not the app). You need `PrivateKey`, the peer's `PublicKey`,
+   `Endpoint` (must be an IP), and your `Address`.
+2. Put `PrivateKey` in `secrets/htpc.yaml` as `protonvpn-private-key` (see
+   Secrets setup) and the other three in `hosts/htpc/secrets.nix`.
+3. Set `lanSubnets` in `hosts/htpc/secrets.nix` to your real home subnet.
 4. `sudo nixos-rebuild switch --flake .#htpc`
 
 The killswitch only allows: loopback, established/related connections, DHCP,
-the initial handshake to the VPN endpoint itself, and anything over the
-`protonvpn` interface. No blanket NTP exception — `fake-hwclock` is what
-removes the need for one. If it's ever insufficient on its own, add a
-narrow `udp dport 123 ip daddr <server> accept` line to the ruleset rather
-than opening NTP broadly.
+the initial handshake to the VPN endpoint itself, `lanSubnets`, and anything
+over the `protonvpn` interface. `lanSubnets` is what lets Moonlight reach
+Balthasar, other devices reach Jellyfin, and Tvheadend reach the HDHomeRun —
+without it, the killswitch blocks the LAN too. No blanket NTP exception —
+`fake-hwclock` is what removes the need for one. If it's ever insufficient
+on its own, add a narrow `udp dport 123 ip daddr <server> accept` line to
+the ruleset rather than opening NTP broadly. IPv4 only for now.
 
 Every module under `modules/` is off by default and gated behind its own
 `services.htpc.*.enable` — that's deliberate, so someone cloning this repo
 turns on only what they want instead of inheriting the whole stack.
+
+## First-run manual steps
+
+Some apps keep their settings in their own state, not in files Nix can
+declare. Each module has a comment with details; the short list:
+
+- **Stremio**: log in with the HTPC-only account; set External player to
+  `/run/current-system/sw/bin/mpv-htpc`; install the AIOStreams manifest
+  from `http://localhost:3000`.
+- **FreeTube**: Settings → External Player → mpv, custom executable `mpv-htpc`.
+- **jellyfin-mpv-shim**: `mpv_ext: true`, `mpv_ext_path` → `mpv-htpc` in its `conf.json`.
+- **Arr stack**: connect Prowlarr → Sonarr/Radarr, add Transmission as the
+  download client, set root folders under `/srv/media`.
+- **Tvheadend** (`:9981`): add the HDHomeRun, scan, map channels, allow
+  anonymous streaming from localhost.
+- **MakeMKV**: enter the beta key (Help → Register).
 
 ## Using this repo without forking it
 
@@ -111,32 +166,28 @@ Two ways to consume this, pick one:
   modules = [ inputs.htpc-nixos.nixosModules.default ./hosts/yourhost ... ];
   ```
   and set whichever `services.htpc.*.enable` flags you want from your own
-  host file — same as `hosts/htpc/default.nix` does below, just from
-  outside this repo. Updating is `nix flake update htpc-nixos`, with zero
-  risk of merge conflicts since you never touch this repo's files directly.
-  This is the cleaner option if you're building your own flake from scratch
-  and just want the media-center pieces.
+  host file — same as `hosts/htpc/default.nix` does, just from outside this
+  repo. Updating is `nix flake update htpc-nixos`, with zero risk of merge
+  conflicts since you never touch this repo's files directly. The modules
+  don't depend on sops-nix — secret options just take file paths, so use
+  whatever secrets tool you like.
 
 Known wrinkle either way: `home/default.nix` currently hardcodes the
-`htpc` username (`home-manager.users.htpc = ...`). If your user is named
-differently, that needs adjusting — hasn't been made configurable yet.
+`htpc` username (`home-manager.users.htpc = ...`), as does
+`hosts/htpc/secrets.nix` (IPTV secret owner). If your user is named
+differently, adjust those — hasn't been made configurable yet.
 
-## Not yet built out
+## Still open
 
-Per the running brainstorm, these are still open and don't have modules yet:
-- DVD rip/play (makemkv/handbrake -> NAS)
-- IPTV (Fred TV) playlist + mpv handoff
-- YouTube frontend (FreeTube vs. self-hosted Invidious/Piped) with SponsorBlock
-- OTA antenna tuner (HDHomeRun + Tvheadend, likely) -> mpv handoff
-- Arr stack + Jellyfin for the "want a kept copy" half of the content strategy
-- Self-hosted AIOStreams instance — intentionally lives on separate home-server
-  infra, not in this repo, so this stays credential-free and publishable
-- Confirm the old config's `stremio-enhanced` usage (no official Nix packaging
-  exists upstream — check whether it's a custom flake input or was ever
-  actually declarative) and decide whether to port it or drop back to plain
-  `stremio`
-- secrets management (sops-nix/agenix) — needed properly once the VPN private
-  key and any future credentials move off ad-hoc root-only files
+- Everything above is roughed in, not tested — first real build/boot pending
+- stremio-enhanced: the old config pulls it from a third-party flake (no
+  official Nix packaging exists). Port that input, or stay on plain `stremio`
+- AIOStreams image is `:latest` — pin a release once it's running
+- IPTV: Fred TV is Apple-only; decide whether plain mpv playlist playback is
+  enough or a guide-style client (e.g. Hypnotix) is wanted
+- Jellyfin: jellyfin-mpv-shim is cast-only; decide whether a couch-browsable
+  client is wanted too
+- DVD: rips land in `/srv/media/dvd-rips` and are moved by hand — automate later?
 
 ## Design notes
 
@@ -148,4 +199,4 @@ Per the running brainstorm, these are still open and don't have modules yet:
 - Every content-source module should hand off to
   `${config.services.htpc.media.mpv.package}/bin/mpv-htpc` rather than raw
   `mpv`, so shader/HDR/interpolation config only lives in one place
-  (`files/mpv/`).
+  (`files/mpv/`). mpv plugins go in `services.htpc.media.mpv.scripts`.
