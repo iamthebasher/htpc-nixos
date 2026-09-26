@@ -11,6 +11,15 @@
     # clone of this repo works for someone who isn't Asher.
     home.packages = [ ];
 
+    # stremio-enhanced plugin: intercepts the stream URL Stremio's local
+    # server (:11470) is about to play and sends it to the handoff listener
+    # on 127.0.0.1:7777 (services.htpc.media.stremio.mpvHandoff), which
+    # launches mpv-htpc. Also mutes/unloads Stremio's own hidden player so
+    # its server stops transcoding. Plugins may need enabling once in
+    # stremio-enhanced's settings.
+    xdg.configFile."stremio-enhanced/plugins/MpvHandoff.plugin.js".source =
+      ../files/stremio-enhanced/MpvHandoff.plugin.js;
+
     programs.home-manager.enable = true;
   };
 }

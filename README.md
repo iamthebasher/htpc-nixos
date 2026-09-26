@@ -23,7 +23,7 @@ hardware:
    `system.stateVersion` to match whatever release you actually install
    from (never change it after the first rebuild), and turn off any
    `services.htpc.*` toggles for hardware you don't have (e.g. `ota`).
-3. Port real mpv config into `files/mpv/` — see `files/mpv/README.md`.
+3. Check `DISPLAY_OUTPUT` in `files/mpv/scripts/auto_upscaler.lua` against `kscreen-doctor -o`.
 4. Set up secrets — see [Secrets setup](#secrets-setup-sops-nix).
 5. `sudo nixos-rebuild switch --flake .#htpc`
 
@@ -182,9 +182,8 @@ differently, adjust those — hasn't been made configurable yet.
 ## Still open
 
 - Everything above is roughed in, not tested — first real build/boot pending
-- stremio-enhanced (from the `custom-packages` flake input) → mpv handoff:
-  port the old setup's custom plugin, pointed at `mpv-htpc`
-- Real mpv config (per-resolution/colourspace shader profiles) → `files/mpv/`
+- Stremio → mpv handoff: new listener (`stremio.mpvHandoff`) replaces the old
+  one, which was never recovered. Needs a first real test with stremio-enhanced
 - AIOStreams image is `:latest` — pin a release once it's running
 - IPTV: Fred TV is a flatpak with its own sandboxed mpv, so it bypasses
   `mpv-htpc`. See if it can be pointed at the host's `mpv-htpc`

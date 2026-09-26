@@ -24,6 +24,7 @@
       stremio = {
         enable = true;
         package = inputs.custom-packages.packages.${pkgs.stdenv.hostPlatform.system}.stremio-enhanced;
+        mpvHandoff.enable = true; # plugin deployed in home/default.nix
       };
       aiostreams.enable = true;
 
@@ -63,6 +64,9 @@
   # NOT go through mpv-htpc / files/mpv shaders. TODO: check whether Fred
   # TV's mpv settings can reach the host mpv-htpc (flatpak-spawn --host),
   # or accept that IPTV is the one source outside the shared pipeline.
+  # sub-font in files/mpv/mpv.conf
+  fonts.packages = [ pkgs.roboto ];
+
   services.flatpak = {
     enable = true;
     packages = [ "dev.fredol.open-tv" ];

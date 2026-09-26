@@ -127,8 +127,12 @@ must work without it. Known gap: the flatpak bundles its own sandboxed mpv,
 so it bypasses mpv-htpc. The `iptv` launcher is the fallback that goes
 through mpv-htpc.
 
-**Asher has his own mpv config** to supply. It has per-resolution and
-per-colourspace shader profiles, and it goes in `files/mpv/`.
+**Asher's mpv config was ported 2026-09-26** from `~/projects/htpcref` (a
+copy of the old HTPC's files). `auto_upscaler.lua` picks a profile by
+resolution tier, HDR vs SDR, and 4:3 (4:3 gets the CRT shader), and toggles
+KDE HDR via `kscreen-doctor`. The old custom mpv build (HopperRender
+interpolation) was already disabled there, so it's dropped in favour of
+nixpkgs mpv and mpv's built-in interpolation. See `files/mpv/README.md`.
 
 ## allowUnfree bug (found 2026-09-23 via `nix flake check`, fix committed 2026-09-25)
 
@@ -161,8 +165,12 @@ the worst place to have a silent mistake.**
   FreeTube, jellyfin-mpv-shim, the Arr stack, Jellyfin Live TV, and MakeMKV
   (README "First-run manual steps")
 - Pin the AIOStreams container image (currently `:latest`)
-- stremio-enhanced → mpv handoff plugin (waiting on Asher to supply the old one)
-- Asher's real mpv config (waiting on Asher to supply it)
+- Stremio handoff: the old listener was never recovered, so a new one was written
+  2026-09-26 (`stremio.mpvHandoff`: a user service in Python on :7777 that
+  launches mpv-htpc). It replaces the old mpv-stremio wrapper too. Untested:
+  needs a real run with stremio-enhanced and the MpvHandoff plugin
+- Chroma shaders now actually load (KrigBilateral live-action, CfL anime).
+  They were silently ignored before, so watch for dropped frames at 4K on the 3070
 - Fred TV flatpak bypasses mpv-htpc. Check whether it can call the host's mpv
 - Low priority: a Jellyfin plugin that exposes the Jellyfin library inside
   Stremio (e.g. Jellio). Installed from Jellyfin's web UI, so the Nix side is small
