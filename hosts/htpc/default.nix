@@ -79,10 +79,14 @@
   networking.hostName = "htpc";
   time.timeZone = "America/New_York"; # adjust if this ever isn't true
 
-  # Match whatever the real hardware-configuration.nix's generated boot
-  # loader stanza actually is (systemd-boot vs. grub) once installed.
-  boot.loader.systemd-boot.enable = lib.mkDefault true;
-  boot.loader.efi.canTouchEfiVariables = lib.mkDefault true;
+  # The HTPC boots in legacy BIOS mode (no UEFI), so GRUB installed to the
+  # disk's MBR. Copied from the original /etc/nixos/configuration.nix.
+  # systemd-boot is not an option here: it needs UEFI.
+  boot.loader.grub = {
+    enable = true;
+    device = "/dev/nvme0n1";
+    useOSProber = true;
+  };
 
   networking.networkmanager.enable = true;
 
