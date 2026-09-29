@@ -89,6 +89,7 @@
   users.users.htpc = {
     isNormalUser = true;
     extraGroups = [
+      "wheel" # sudo — without it there's no way to rebuild after switching
       "networkmanager"
       "video"
       "audio"
