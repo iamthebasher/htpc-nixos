@@ -107,5 +107,8 @@
   # for editing secrets/htpc.yaml on the box itself (`sops secrets/htpc.yaml`)
   environment.systemPackages = [ pkgs.sops pkgs.age ];
 
+  programs.firefox.enable = true;
+  programs.neovim.enable = true;
+
   system.stateVersion = "25.11"; # from the HTPC's original install — never change it
 }

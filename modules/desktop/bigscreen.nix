@@ -21,6 +21,13 @@ in
 
     environment.systemPackages = [ pkgs.kdePackages.plasma-bigscreen ];
 
+    # The Bigscreen homescreen's header imports a KDE Connect indicator
+    # (QML module org.kdeconnect), but the nixpkgs package doesn't depend on
+    # it — without this the homescreen fails to load entirely ("type
+    # homescreen unavailable"). Also makes a phone usable as a remote.
+    # TODO: report upstream to nixpkgs so plasma-bigscreen pulls it in.
+    programs.kdeconnect.enable = true;
+
     xdg.portal.configPackages = [ pkgs.kdePackages.plasma-bigscreen ];
 
     services.displayManager.sddm = {

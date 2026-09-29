@@ -2,7 +2,7 @@
 
 {
   home-manager.users.htpc = { pkgs, ... }: {
-    home.stateVersion = "26.05"; # home-manager's own, independent of system.stateVersion: the release HM was first used with here. Never change it
+    home.stateVersion = "25.11"; # home-manager's own, independent of system.stateVersion: the release HM was first used with here. Never change it
 
     # Placeholder — this is where per-user dotfile-style config goes as it's
     # ported over: mpv keybind overrides that are user- rather than

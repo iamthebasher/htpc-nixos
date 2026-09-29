@@ -6,16 +6,16 @@ for others to use as a template or flake input. This file exists so a new
 session doesn't have to be re-briefed from scratch; see README.md for
 structural/how-to details, this file for *why* things are the way they are.
 
-## Status as of 2026-09-25
+## Status as of 2026-09-29
 
-Scaffold pushed to `github.com/iamthebasher/htpc-nixos`. The allowUnfree fix
-(below) passed `nix flake check` on 2026-09-25 (evaluation only, nothing
-built). Later that day, sops-nix and rough drafts of every remaining
-content module were added (AIOStreams, Arr, Jellyfin, IPTV, YouTube, DVD,
-OTA). **Those haven't been through `nix flake check` yet** and nothing has
-been built or tested on real hardware. Hardware- and device-specific details
-(subnets, tuner, endpoint IPs) are placeholders, to be fixed once the config
-is on the HTPC.
+First real boot on the HTPC happened 2026-09-29 via `nixos-rebuild boot`.
+Working: the desktop, mpv-htpc with shaders loading, and the Stremio → mpv
+handoff (the new listener). Plasma Bigscreen's homescreen failed to load
+because the QML module org.kdeconnect was missing. The fix
+(`programs.kdeconnect.enable` in bigscreen.nix) is committed but untested.
+The HTPC boots legacy BIOS with GRUB on /dev/nvme0n1, and its
+system.stateVersion is 25.11, matching the original install. The ProtonVPN
+module is still off: `./secrets.nix` has not been imported yet.
 
 Asher runs all `nix` commands (`nix flake check`, `nixos-rebuild`, etc.)
 himself — edit files, then hand off for verification.
