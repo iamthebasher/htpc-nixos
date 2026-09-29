@@ -103,5 +103,5 @@
   # for editing secrets/htpc.yaml on the box itself (`sops secrets/htpc.yaml`)
   environment.systemPackages = [ pkgs.sops pkgs.age ];
 
-  system.stateVersion = "26.05"; # set to whatever release you actually install from — do not change after first rebuild
+  system.stateVersion = "25.11"; # from the HTPC's original install — never change it
 }
