@@ -47,6 +47,27 @@ in
     # Pairing is remembered, so this can also be switched off again once the
     # devices you want are paired.
     kdeconnect.autoAcceptPairing = mkEnableOption "accepting every KDE Connect pairing request automatically (no confirmation dialog)";
+
+    # On Wayland, KDE Connect's remote input (phone as mouse/keyboard) goes
+    # through the RemoteDesktop portal, which asks "allow remote control?"
+    # every session. That needs a mouse. This pre-grants it in the portal
+    # permission store's kde-authorized table, the same mechanism KDE uses for
+    # krdp. Same trust caveat as autoAcceptPairing: paired devices can then
+    # send input without asking.
+    kdeconnect.allowRemoteInput = mkEnableOption "KDE Connect remote input without the per-session permission prompt";
+
+    fullscreenApps = mkOption {
+      type = types.listOf types.str;
+      default = [ ];
+      example = [ "moonlight" "open-tv" ];
+      description = ''
+        Case-insensitive regexes matched against window classes (Wayland
+        app ids). Matching windows open fullscreen through a KWin window
+        rule, for apps that start windowed and have no fullscreen setting
+        of their own. Find an app's class with KWin's "Detect window
+        properties" in System Settings -> Window Rules.
+      '';
+    };
   };
 
   # NOTE: as of Plasma 6.7 (stable since June 2026, currently 6.7.4), Bigscreen
@@ -83,6 +104,54 @@ in
         pulse.enable = lib.mkDefault true;
       };
     }
+
+    (mkIf cfg.kdeconnect.allowRemoteInput {
+      # One-shot write to the portal permission store, which persists in
+      # ~/.local/share/flatpak/db. Re-running every login just keeps it set.
+      # SetPermission(table, create, id, app, permissions)
+      systemd.user.services.kdeconnect-allow-remote-input = {
+        description = "Pre-authorize KDE Connect remote input (RemoteDesktop portal)";
+        wantedBy = [ "graphical-session.target" ];
+        partOf = [ "graphical-session.target" ];
+        after = [ "graphical-session.target" ];
+        serviceConfig = {
+          Type = "oneshot";
+          ExecStart = concatStringsSep " " [
+            "${pkgs.systemd}/bin/busctl --user call"
+            "org.freedesktop.impl.portal.PermissionStore"
+            "/org/freedesktop/impl/portal/PermissionStore"
+            "org.freedesktop.impl.portal.PermissionStore"
+            "SetPermission sbssas kde-authorized true remote-desktop org.kde.kdeconnect.daemon 1 yes"
+          ];
+        };
+      };
+    })
+
+    (mkIf (cfg.fullscreenApps != [ ]) {
+      # System-wide KWin rules: KConfig cascades /etc/xdg under the user's
+      # ~/.config, so this applies as long as the user hasn't made their own
+      # rules list (a user kwinrulesrc [General] section would override it).
+      # wmclassmatch=3 is regex (partial match), fullscreenrule=3 is "apply
+      # initially", so a window can still leave fullscreen afterwards.
+      environment.etc."xdg/kwinrulesrc".text =
+        let
+          name = i: "htpc-fullscreen-${toString i}";
+        in
+        ''
+          [General]
+          count=${toString (length cfg.fullscreenApps)}
+          rules=${concatStringsSep "," (imap1 (i: _: name i) cfg.fullscreenApps)}
+        ''
+        + concatStrings (imap1 (i: re: ''
+
+          [${name i}]
+          Description=Fullscreen: ${re}
+          wmclass=(?i)${re}
+          wmclassmatch=3
+          fullscreen=true
+          fullscreenrule=3
+        '') cfg.fullscreenApps);
+    })
 
     (mkIf cfg.kdeconnect.autoAcceptPairing {
       systemd.user.services.kdeconnect-autoaccept = {

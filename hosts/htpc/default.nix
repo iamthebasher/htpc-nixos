@@ -25,13 +25,18 @@
     desktop.bigscreen = {
       enable = true;
       kdeconnect.autoAcceptPairing = true; # no mouse-only pairing dialog; trusted LAN only
+      kdeconnect.allowRemoteInput = true; # no "allow remote control?" prompt each login
+      # both start windowed otherwise. Fred TV is the dev.fredol.open-tv flatpak
+      fullscreenApps = [ "moonlight" "open-tv" ];
     };
 
     media = {
       mpv.enable = true;
       stremio = {
         enable = true;
-        package = inputs.custom-packages.packages.${pkgs.stdenv.hostPlatform.system}.stremio-enhanced;
+        # 1.2.1 packaged locally until custom-packages updates (see the file).
+        # Was: inputs.custom-packages.packages.${pkgs.stdenv.hostPlatform.system}.stremio-enhanced
+        package = pkgs.callPackage ./stremio-enhanced.nix { };
         mpvHandoff.enable = true; # plugin deployed in home/default.nix
       };
       aiostreams.enable = true;

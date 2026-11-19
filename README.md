@@ -41,7 +41,7 @@ modules/
   default.nix                      the full module list (used by the host and nixosModules.default)
   hardware/nvidia.nix              services.htpc.hardware.nvidia.enable
   hardware/input.nix               services.htpc.hardware.input.{logging,tools,remotes.mx3Pro}.enable — udev device log, input debug tools, per-remote fixes
-  desktop/bigscreen.nix            services.htpc.desktop.bigscreen.{enable,kdeconnect.autoAcceptPairing}
+  desktop/bigscreen.nix            services.htpc.desktop.bigscreen.{enable,kdeconnect.*,fullscreenApps}
   media/mpv.nix                    services.htpc.media.mpv.enable — the shared wrapper
   media/library.nix                services.htpc.media.library.{dir,group} — shared /srv/media + group
   media/stremio.nix                services.htpc.media.stremio.enable

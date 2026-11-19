@@ -36,6 +36,17 @@ The real `hosts/htpc/hardware-configuration.nix` was committed 2026-11-19
 (root ext4 by-uuid 3c149b35-..., no /boot or swap). It used to exist only
 uncommitted in the HTPC's clone, so the first `github:` build used the
 placeholder and failed to boot. Regenerate and commit it if the disks change.
+
+2026-11-19 HTPC feedback: Stremio Web v5.1 broke stremio-enhanced 1.2.0 (no
+Enhanced settings section, themes gone). 1.2.1 is packaged locally in
+`hosts/htpc/stremio-enhanced.nix` until custom-packages updates. The
+Movies button (KEY_CONFIG) was a Plasma quick-settings shortcut, so it is
+remapped to KEY_FAVORITES via hwdb. Moonlight and Fred TV get a KWin
+fullscreen rule (`bigscreen.fullscreenApps`). KDE Connect remote input is
+pre-authorized in the portal's kde-authorized table. All untested. Still
+to do: a Stremio plugin forwarding the remote's Back and Search buttons.
+YouTube on the HTPC is "still shocking", details pending. VacuumTube
+(YouTube TV UI) isn't in nixpkgs.
 The MX3 Pro was mapped the same day, on the desktop rather than the HTPC. It
 already sends standard remote keycodes, so there is no hwdb remap. Its player
 bindings are in `files/mpv/input.conf`, and `remotes.mx3Pro` only stops USB

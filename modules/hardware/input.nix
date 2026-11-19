@@ -60,14 +60,14 @@ in
     #   skip fwd KEY_FASTFORWARD arrows KEY_UP/...     pg up/dn KEY_PAGEUP/DOWN
     #   previous KEY_PREVIOUSSONG  ok KEY_ENTER        0-9 KEY_0..KEY_9
     #   next KEY_NEXTSONG        list KEY_COMPOSE      del KEY_BACKSPACE
-    #   search KEY_SEARCH        movies KEY_CONFIG     "!" KEY_MAIL
+    #   search KEY_SEARCH        movies KEY_CONFIG*    "!" KEY_MAIL
     #   play/pause KEY_PLAYPAUSE zoom +/- KEY_ZOOMIN/OUT  IE KEY_WWW
     #
     # Backlight, TV (IR-learning) and air-mouse toggle send nothing: handled
     # inside the remote, as do red/green/yellow/blue (re-tested). The
     # keyboard side sends ordinary keys. These are already the codes remote
     # software expects, so there's no hwdb remap; player behaviour for them
-    # lives in files/mpv/input.conf.
+    # lives in files/mpv/input.conf. *Remapped to KEY_FAVORITES (see below).
     remotes.mx3Pro = {
       enable = mkEnableOption ''
         MX3 Pro air-mouse remote support: keeps its USB receiver from
@@ -119,6 +119,17 @@ in
     })
 
     (mkIf cfg.remotes.mx3Pro.enable {
+      # "Movies" button: KEY_CONFIG (XF86Tools) is a Plasma global shortcut
+      # that opens quick settings, so mpv never saw it. Remapped to
+      # KEY_FAVORITES, which nothing in Plasma binds; mpv gets it as
+      # FAVORITES (files/mpv/input.conf). c0183 = HID consumer page usage
+      # 0x183 ("AL Consumer Control Configuration"), which the kernel maps
+      # to KEY_CONFIG.
+      services.udev.extraHwdb = ''
+        evdev:input:b0003v0406p2814*
+         KEYBOARD_KEY_c0183=favorites
+      '';
+
       services.udev.extraRules = ''
         ACTION=="add", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="0406", ATTR{idProduct}=="2814", ATTR{power/control}="on", ATTR{power/wakeup}="${if cfg.remotes.mx3Pro.wakeFromSuspend then "enabled" else "disabled"}"
       '';
