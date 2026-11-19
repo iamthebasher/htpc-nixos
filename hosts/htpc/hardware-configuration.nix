@@ -19,6 +19,20 @@
 {
   imports = [ (modulesPath + "/installer/scan/not-detected.nix") ];
 
+  # Refuse to build while this is still the placeholder. Without this, a
+  # build from it succeeds and then can't find the root disk on the next
+  # boot (happened 2026-11-19, building from github: instead of the HTPC's
+  # own clone). Disappears when the real generated file replaces this one.
+  assertions = [{
+    assertion = false;
+    message = ''
+      hosts/htpc/hardware-configuration.nix is still the placeholder (root
+      disk REPLACE-ME). Generate the real one on the HTPC:
+        sudo nixos-generate-config --show-hardware-config > hosts/htpc/hardware-configuration.nix
+      and commit it.
+    '';
+  }];
+
   # --- fill in from the real nixos-generate-config output ---
   boot.initrd.availableKernelModules = [ ];
   boot.initrd.kernelModules = [ ];

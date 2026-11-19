@@ -204,8 +204,11 @@ the worst place to have a silent mistake.**
   Needs a TV backend run as a container, since nixpkgs removed Tvheadend).
   Picture quality is identical either way. If USB wins, ota.nix needs rework
 - Jellyfin: jellyfin-mpv-shim is cast-only. Is a couch-browsable client wanted?
-- `hosts/htpc/hardware-configuration.nix` is still a placeholder — needs
-  `nixos-generate-config` run on the real HTPC
+- `hosts/htpc/hardware-configuration.nix` is still a placeholder in git. The
+  HTPC's own clone had the real file, uncommitted. On 2026-11-19 a build from
+  `github:` used the placeholder and the HTPC failed to boot (root disk
+  REPLACE-ME). The placeholder now fails the build with an assertion. Commit
+  the real file. Never build from `github:` until it's in
 
 ## Working conventions established so far
 
