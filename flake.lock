@@ -1,25 +1,5 @@
 {
   "nodes": {
-    "custom-packages": {
-      "inputs": {
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1795046699,
-        "narHash": "sha256-V4LHOEOaz+aRvVjBbUbltrDSnD/vjiLCHGWzMDiqzss=",
-        "owner": "Rishabh5321",
-        "repo": "custom-packages-flake",
-        "rev": "239f23b2cda9107b1a39b5249a285957f7881d27",
-        "type": "github"
-      },
-      "original": {
-        "owner": "Rishabh5321",
-        "repo": "custom-packages-flake",
-        "type": "github"
-      }
-    },
     "home-manager": {
       "inputs": {
         "nixpkgs": [
@@ -74,7 +54,6 @@
     },
     "root": {
       "inputs": {
-        "custom-packages": "custom-packages",
         "home-manager": "home-manager",
         "nix-flatpak": "nix-flatpak",
         "nixpkgs": "nixpkgs",

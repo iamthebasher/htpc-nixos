@@ -30,7 +30,7 @@ hardware:
 ## Layout
 
 ```
-flake.nix                          inputs + nixosModules.default + nixosConfigurations.htpc
+flake.nix                          inputs + nixosModules.default + packages + nixosConfigurations.htpc
 .sops.yaml                         which age keys can decrypt which secrets file
 secrets/htpc.yaml                  encrypted secrets (create it — see Secrets setup)
 hosts/htpc/
@@ -56,7 +56,9 @@ modules/
   system/fake-hwclock.nix          services.htpc.system.fakeHwclock.enable — clock save/restore for dead-RTC hardware
   network/protonvpn.nix            services.htpc.network.protonvpn.enable — declarative WireGuard + nftables killswitch
 home/default.nix                   home-manager module (imported as a NixOS module, one rebuild does both)
+pkgs/stremio-linux-shell-enhanced/ Stremio Enhanced on the native GTK/WebKit shell, built from source
 files/mpv/                         mpv config dir referenced by modules/media/mpv.nix
+files/stremio-enhanced/            Stremio Enhanced plugins: MpvHandoffShell (-> mpv-htpc), RemoteKeys (remote buttons)
 ```
 
 ## Secrets setup (sops-nix)
@@ -140,9 +142,12 @@ turns on only what they want instead of inheriting the whole stack.
 Some apps keep their settings in their own state, not in files Nix can
 declare. Each module has a comment with details; the short list:
 
-- **Stremio**: log in with the HTPC-only account; set External player to
-  `/run/current-system/sw/bin/mpv-htpc`; install the AIOStreams manifest
-  from `http://localhost:3000`.
+- **Stremio** (Stremio Enhanced, native shell): log in with the HTPC-only
+  account and install the AIOStreams manifest from `http://localhost:3000`.
+  Playback goes to `mpv-htpc` through the MpvHandoffShell plugin, which
+  home-manager deploys and switches on, so no external-player setting is
+  needed. (Plain `pkgs.stremio`: set External player to
+  `/run/current-system/sw/bin/mpv-htpc` instead.)
 - **FreeTube**: Settings → External Player → mpv, custom executable `mpv-htpc`.
 - **jellyfin-mpv-shim**: `mpv_ext: true`, `mpv_ext_path` → `mpv-htpc` in its `conf.json`.
 - **Arr stack**: connect Prowlarr → Sonarr/Radarr, add Transmission as the
@@ -183,8 +188,11 @@ differently, adjust those — hasn't been made configurable yet.
 ## Still open
 
 - Everything above is roughed in, not tested — first real build/boot pending
-- Stremio → mpv handoff: new listener (`stremio.mpvHandoff`) replaces the old
-  one, which was never recovered. Needs a first real test with stremio-enhanced
+- Stremio: switched 2026-11-19 to Stremio Enhanced on the native GTK/WebKit
+  shell, built from source (`pkgs/stremio-linux-shell-enhanced`, also
+  `nix build .#stremio-linux-shell-enhanced`). Handoff to mpv-htpc, auto-back
+  when mpv closes, and the remote plugin (RemoteKeys) all tested on the
+  desktop; first run on the HTPC pending
 - AIOStreams image is `:latest` — pin a release once it's running
 - IPTV: Fred TV is a flatpak with its own sandboxed mpv, so it bypasses
   `mpv-htpc`. See if it can be pointed at the host's `mpv-htpc`

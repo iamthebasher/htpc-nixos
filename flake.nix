@@ -16,14 +16,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Third-party packages not in nixpkgs — here for stremio-enhanced (same
-    # source the old HTPC config used). No binary cache, and following our
-    # nixpkgs means it builds locally either way.
-    custom-packages = {
-      url = "github:Rishabh5321/custom-packages-flake";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     # Declarative flatpaks (plain NixOS can only enable flatpak, not choose
     # which apps are installed). Here for Fred TV, which isn't in nixpkgs.
     nix-flatpak.url = "github:gmodena/nix-flatpak/?ref=latest";
@@ -49,6 +41,13 @@
       # The module list itself lives in modules/default.nix so this and
       # hosts/htpc/default.nix import the exact same set.
       nixosModules.default = import ./modules;
+
+      # Packages this repo builds that nixpkgs doesn't have. Usable on any
+      # machine: `nix build .#stremio-linux-shell-enhanced`, or
+      # `nix run .#stremio-linux-shell-enhanced`. (Nothing here is unfree,
+      # so plain legacyPackages is fine despite the note above.)
+      packages.${system}.stremio-linux-shell-enhanced =
+        nixpkgs.legacyPackages.${system}.callPackage ./pkgs/stremio-linux-shell-enhanced { };
 
       # The concrete half — this actual machine. Not meant to be imported by
       # anyone else; it's the "instance" that uses nixosModules.default above,

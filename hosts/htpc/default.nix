@@ -34,10 +34,11 @@
       mpv.enable = true;
       stremio = {
         enable = true;
-        # 1.2.1 packaged locally until custom-packages updates (see the file).
-        # Was: inputs.custom-packages.packages.${pkgs.stdenv.hostPlatform.system}.stremio-enhanced
-        package = pkgs.callPackage ./stremio-enhanced.nix { };
-        mpvHandoff.enable = true; # plugin deployed in home/default.nix
+        # Stremio Enhanced on the native GTK/WebKit shell, built from source
+        # in this repo (replaced the Electron AppImage 2026-11-19; upstream is
+        # moving to this one). Plugins deployed and enabled in home/default.nix
+        package = pkgs.callPackage ../../pkgs/stremio-linux-shell-enhanced { };
+        mpvHandoff.enable = true;
       };
       aiostreams.enable = true;
 

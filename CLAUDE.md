@@ -38,13 +38,13 @@ uncommitted in the HTPC's clone, so the first `github:` build used the
 placeholder and failed to boot. Regenerate and commit it if the disks change.
 
 2026-11-19 HTPC feedback: Stremio Web v5.1 broke stremio-enhanced 1.2.0 (no
-Enhanced settings section, themes gone). 1.2.1 is packaged locally in
-`hosts/htpc/stremio-enhanced.nix` until custom-packages updates. The
+Enhanced settings section, themes gone). 1.2.1 was packaged locally, then
+replaced the same day by the native shell (see the Stremio Enhanced entry
+below). The
 Movies button (KEY_CONFIG) was a Plasma quick-settings shortcut, so it is
 remapped to KEY_FAVORITES via hwdb. Moonlight and Fred TV get a KWin
 fullscreen rule (`bigscreen.fullscreenApps`). KDE Connect remote input is
-pre-authorized in the portal's kde-authorized table. All untested. Still
-to do: a Stremio plugin forwarding the remote's Back and Search buttons.
+pre-authorized in the portal's kde-authorized table. All untested on the HTPC.
 YouTube on the HTPC is "still shocking", details pending. VacuumTube
 (YouTube TV UI) isn't in nixpkgs.
 The MX3 Pro was mapped the same day, on the desktop rather than the HTPC. It
@@ -147,14 +147,28 @@ every module is gated behind its own `services.htpc.*.enable` option rather
 than being unconditionally imported — cheap to import, inert unless
 switched on.
 
-**stremio-enhanced comes from a third-party flake.** It isn't packaged in
-nixpkgs. Decided 2026-09-25: port the old config's source,
-`github:Rishabh5321/custom-packages-flake` (the `custom-packages` input,
-following our nixpkgs, with no binary cache). `stremio.nix` has a `package`
-option that defaults to plain `pkgs.stremio`. Only the host swaps in
-stremio-enhanced, so the module doesn't depend on the input. The old setup
-also has a custom Stremio plugin that hands stremio-enhanced playback to
-mpv. Asher will supply it; port it and point it at mpv-htpc.
+**Stremio Enhanced runs on the native shell, built from source in
+`pkgs/stremio-linux-shell-enhanced`** (switched 2026-11-19). REVENGE977 is
+moving from the Electron stremio-enhanced to his fork of Stremio's Rust
+stremio-linux-shell (GTK4 + WebKitGTK + libmpv), whose only release artifact
+is a "Devel" flatpak bundle, so it's built here. The custom-packages flake
+input (Electron AppImage) was dropped. Packaging lessons: WebKitGTK needs
+`glib-networking` or every https request fails ("Load failed"), while the
+UI still loads over plain http from the streaming server's proxy. Its mpv
+config default is patched away from ~/.config/mpv/mpv.conf, because
+force-window there aborts the embedded libmpv at startup. Its build.rs
+npx call is replaced by nixpkgs esbuild. The wrapper is a shell wrapper
+(dontWrapGApps + wrapProgramShell) because it needs --run. Plugins live in
+`files/stremio-enhanced/`: MpvHandoffShell catches Stremio's IPC
+`mpv-command loadfile` (webkit.messageHandlers.ipc), sends it to the
+:7777 listener, skips Stremio's second :11470 copy of a direct link, and
+backs out of the player when the listener's /status says mpv closed.
+RemoteKeys maps Back/Search/List/Home (BrowserBack, BrowserSearch,
+ContextMenu, BrowserHome in WebKit). New plugins start disabled, so a
+home-manager activation step sets them on in settings.json with jq. The
+shell only forwards console lines tagged `[Plugin]`/`[Enhanced]` to its
+terminal, which is how the plugins log. `stremio.nix` keeps a `package`
+option defaulting to plain `pkgs.stremio`.
 
 **Fred TV is a flatpak** (`dev.fredol.open-tv`, Fredolx's Open TV). It isn't
 in nixpkgs, so it's installed with nix-flatpak, declared in
@@ -212,10 +226,9 @@ the worst place to have a silent mistake.**
   UEFI-capable, but the disk has no EFI partition (a single ext4 root on
   MBR), so that move needs repartitioning
 - Pin the AIOStreams container image (currently `:latest`)
-- Stremio handoff: the old listener was never recovered, so a new one was written
-  2026-09-26 (`stremio.mpvHandoff`: a user service in Python on :7777 that
-  launches mpv-htpc). It replaces the old mpv-stremio wrapper too. Untested:
-  needs a real run with stremio-enhanced and the MpvHandoff plugin
+- Stremio on the HTPC: first run of the native shell (login, AIOStreams,
+  handoff to mpv-htpc with shaders, RemoteKeys vs Bigscreen grabbing Back or
+  Home). All of it worked on the desktop 2026-11-19
 - Chroma shaders now actually load (KrigBilateral live-action, CfL anime).
   They were silently ignored before, so watch for dropped frames at 4K on the 3070
 - Fred TV flatpak bypasses mpv-htpc. Check whether it can call the host's mpv

@@ -5,11 +5,13 @@ with lib;
 let
   cfg = config.services.htpc.media.stremio;
 
-  # Receives stream URLs from the MpvHandoff stremio-enhanced plugin
-  # (files/stremio-enhanced/) and plays them in mpv-htpc. One player at a
+  # Receives stream URLs from the Stremio Enhanced handoff plugins
+  # (files/stremio-enhanced/MpvHandoff*.plugin.js) and plays them in mpv-htpc.
+  # GET /play?url= starts a stream; GET /status reports whether mpv is open. One player at a
   # time: a new URL replaces whatever the listener launched before.
   handoffListener = pkgs.writers.writePython3Bin "stremio-mpv-handoff"
     { flakeIgnore = [ "E501" ]; } ''
+    import json
     import subprocess
     from http.server import BaseHTTPRequestHandler, HTTPServer
     from urllib.parse import urlparse, parse_qs
@@ -31,6 +33,19 @@ let
         def do_GET(self):
             global player
             req = urlparse(self.path)
+            # Polled by the plugins once a second during playback, so they
+            # can leave Stremio's player screen when mpv closes. CORS so the
+            # page can read the reply; all it reveals is whether mpv is open.
+            if req.path == "/status":
+                body = json.dumps({"playing": player is not None and player.poll() is None}).encode()
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.send_header("Cache-Control", "no-store")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+                return
             url = parse_qs(req.query).get("url", [""])[0]
             # Only play http(s) URLs. Anything else on this port, like a
             # web page probing localhost, gets a 400.
@@ -44,6 +59,8 @@ let
             self.end_headers()
 
         def log_message(self, fmt, *args):
+            if self.path.startswith("/status"):
+                return  # once a second during playback; would flood the journal
             print(fmt % args, flush=True)
 
 
@@ -59,9 +76,9 @@ in
       default = pkgs.stremio;
       defaultText = literalExpression "pkgs.stremio";
       description = ''
-        Stremio build to install. The HTPC host swaps in stremio-enhanced
-        from a third-party flake (it isn't in nixpkgs); this module stays
-        free of that input so it's reusable with plain nixpkgs.
+        Stremio build to install. The HTPC host uses Stremio Enhanced on the
+        native shell (pkgs/stremio-linux-shell-enhanced in this repo, not in
+        nixpkgs); the default keeps this module usable with plain nixpkgs.
       '';
     };
 
@@ -80,7 +97,7 @@ in
 
     mpvHandoff = {
       enable = mkEnableOption ''
-        the handoff listener for stremio-enhanced's MpvHandoff plugin: a
+        the handoff listener for the Stremio Enhanced MpvHandoff plugins: a
         per-user service on 127.0.0.1 that plays the URLs the plugin sends
         in mpv-htpc (the plugin file itself is deployed by home-manager)
       '';
@@ -106,7 +123,7 @@ in
 
       # Plain Stremio: point Settings -> Player -> External player at
       # /run/current-system/sw/bin/mpv-htpc by hand on first launch.
-      # stremio-enhanced: use mpvHandoff below instead.
+      # Stremio Enhanced: use mpvHandoff below and its plugin instead.
     }
 
     (mkIf cfg.mpvHandoff.enable {
