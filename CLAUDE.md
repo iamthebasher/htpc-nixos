@@ -193,6 +193,13 @@ the worst place to have a silent mistake.**
 - MakeMKV: `dvd.rip` turned off 2026-11-19 because nixpkgs' makemkv-oss 2.0.0
   fails with a hash mismatch. Turn it back on in hosts/htpc/default.nix once
   nixpkgs fixes it
+- Bootloader: the GRUB menu (BIOS/MBR) seemed to choose the first entry
+  instantly on 2026-11-19, so older builds couldn't be picked. The cause was
+  never found: the default timeout should be 5s, and a wireless receiver
+  sending a key is a suspect. Options: Limine (NixOS module, supports BIOS),
+  or a move to UEFI + systemd-boot. The new motherboard is almost certainly
+  UEFI-capable, but the disk has no EFI partition (a single ext4 root on
+  MBR), so that move needs repartitioning
 - Pin the AIOStreams container image (currently `:latest`)
 - Stremio handoff: the old listener was never recovered, so a new one was written
   2026-09-26 (`stremio.mpvHandoff`: a user service in Python on :7777 that
