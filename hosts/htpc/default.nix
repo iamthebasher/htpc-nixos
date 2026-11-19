@@ -19,6 +19,7 @@
     hardware.input = {
       logging.enable = true; # journalctl -u input-udev-log
       tools.enable = true; # evtest, libinput, input-report
+      remotes.mx3Pro.enable = true;
     };
 
     desktop.bigscreen = {

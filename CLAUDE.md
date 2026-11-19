@@ -31,6 +31,12 @@ journal (`journalctl -u input-udev-log`) and installs evtest, libinput and
 `input-report`. Key presses are deliberately not logged, since a keyboard
 log would capture passwords. Button codes are captured on demand instead.
 Per-device keymaps (hwdb) go in this module once the codes are known.
+The MX3 Pro was mapped the same day, on the desktop rather than the HTPC. It
+already sends standard remote keycodes, so there is no hwdb remap. Its player
+bindings are in `files/mpv/input.conf`, and `remotes.mx3Pro` only stops USB
+autosuspend for its receiver. The red/green/yellow/blue buttons were never
+captured. Bigscreen's handling of Back and Home has not been checked on
+the HTPC yet.
 
 Asher runs all `nix` commands (`nix flake check`, `nixos-rebuild`, etc.)
 himself — edit files, then hand off for verification.

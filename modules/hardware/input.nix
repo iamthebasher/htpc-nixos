@@ -50,6 +50,40 @@ in
       input debugging tools: evtest, libinput (debug-events), usbutils, and
       `input-report`, which snapshots all current input devices
     '';
+
+    # MX3 Pro air mouse (backlit keyboard on the back). Its receiver reports
+    # as the generic "2.4G Composite Devic", USB 0406:2814, shared by many
+    # cheap air remotes. Captured 2026-11-19 with libinput debug-events:
+    #
+    #   power KEY_POWER          home KEY_HOMEPAGE     vol+/- KEY_VOLUMEUP/DOWN
+    #   skip back KEY_REWIND     back KEY_BACK         mute KEY_MUTE
+    #   skip fwd KEY_FASTFORWARD arrows KEY_UP/...     pg up/dn KEY_PAGEUP/DOWN
+    #   previous KEY_PREVIOUSSONG  ok KEY_ENTER        0-9 KEY_0..KEY_9
+    #   next KEY_NEXTSONG        list KEY_COMPOSE      del KEY_BACKSPACE
+    #   search KEY_SEARCH        movies KEY_CONFIG     "!" KEY_MAIL
+    #   play/pause KEY_PLAYPAUSE zoom +/- KEY_ZOOMIN/OUT  IE KEY_WWW
+    #
+    # Backlight, TV (IR-learning) and air-mouse toggle send nothing: handled
+    # inside the remote. Red/green/yellow/blue: not yet captured. The
+    # keyboard side sends ordinary keys. These are already the codes remote
+    # software expects, so there's no hwdb remap; player behaviour for them
+    # lives in files/mpv/input.conf.
+    remotes.mx3Pro = {
+      enable = mkEnableOption ''
+        MX3 Pro air-mouse remote support: keeps its USB receiver from
+        autosuspending, which delays or drops the first button press after
+        the remote has been idle
+      '';
+      wakeFromSuspend = mkOption {
+        type = types.bool;
+        default = false;
+        description = ''
+          Let the remote wake the machine from suspend. Off by default:
+          with air-mouse mode on, just picking the remote up sends motion
+          and would wake it.
+        '';
+      };
+    };
   };
 
   config = mkMerge [
@@ -82,6 +116,12 @@ in
           NoNewPrivileges = true;
         };
       };
+    })
+
+    (mkIf cfg.remotes.mx3Pro.enable {
+      services.udev.extraRules = ''
+        ACTION=="add", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="0406", ATTR{idProduct}=="2814", ATTR{power/control}="on", ATTR{power/wakeup}="${if cfg.remotes.mx3Pro.wakeFromSuspend then "enabled" else "disabled"}"
+      '';
     })
 
     (mkIf cfg.tools.enable {

@@ -9,6 +9,7 @@ Ported from the old HTPC's `~/.config/mpv` on 2026-09-26.
 
 ## How it works
 
+- `input.conf` — remote-control bindings (Back quits and remembers the position, number keys jump to 0–90%, the extra remote buttons switch tracks, open the menu, toggle anime and show stats). See the comments in the file.
 - `mpv.conf` — global defaults plus one profile per
   `{youtube_,}{upscale,anime}_{480,720,1080,native}{,_crt}` combination.
 - `scripts/auto_upscaler.lua` picks the profile on every file load: by
