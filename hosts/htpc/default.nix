@@ -16,6 +16,10 @@
   # --- this machine's feature toggles ---
   services.htpc = {
     hardware.nvidia.enable = true;
+    hardware.input = {
+      logging.enable = true; # journalctl -u input-udev-log
+      tools.enable = true; # evtest, libinput, input-report
+    };
 
     desktop.bigscreen = {
       enable = true;

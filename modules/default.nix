@@ -5,6 +5,7 @@
 {
   imports = [
     ./hardware/nvidia.nix
+    ./hardware/input.nix
     ./desktop/bigscreen.nix
 
     ./media/mpv.nix

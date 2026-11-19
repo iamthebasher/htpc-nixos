@@ -22,7 +22,15 @@ in auto_upscaler.lua. Heroic and Lutris were added (`gaming.{heroic,lutris}`),
 since Epic has no Linux client. KDE Connect now auto-accepts pairing
 (`bigscreen.kdeconnect.autoAcceptPairing`, a busctl polling user service), so
 no dialog needs a mouse. Any LAN device can now pair, which was accepted for a
-home network. A physical remote is planned but not working yet.
+home network.
+
+2026-11-19: the MX3 Pro remote turned up (its dongle had gone missing in a
+motherboard swap). Added `modules/hardware/input.nix`
+(`hardware.input.{logging,tools}`): it logs udev hotplug events to the
+journal (`journalctl -u input-udev-log`) and installs evtest, libinput and
+`input-report`. Key presses are deliberately not logged, since a keyboard
+log would capture passwords. Button codes are captured on demand instead.
+Per-device keymaps (hwdb) go in this module once the codes are known.
 
 Asher runs all `nix` commands (`nix flake check`, `nixos-rebuild`, etc.)
 himself — edit files, then hand off for verification.
