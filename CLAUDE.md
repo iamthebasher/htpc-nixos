@@ -17,6 +17,13 @@ The HTPC boots legacy BIOS with GRUB on /dev/nvme0n1, and its
 system.stateVersion is 25.11, matching the original install. The ProtonVPN
 module is still off: `./secrets.nix` has not been imported yet.
 
+2026-11-18 (all untested): CRT shader turned off via `CRT_ENABLED = false`
+in auto_upscaler.lua. Heroic and Lutris were added (`gaming.{heroic,lutris}`),
+since Epic has no Linux client. KDE Connect now auto-accepts pairing
+(`bigscreen.kdeconnect.autoAcceptPairing`, a busctl polling user service), so
+no dialog needs a mouse. Any LAN device can now pair, which was accepted for a
+home network. A physical remote is planned but not working yet.
+
 Asher runs all `nix` commands (`nix flake check`, `nixos-rebuild`, etc.)
 himself — edit files, then hand off for verification.
 
@@ -182,7 +189,6 @@ the worst place to have a silent mistake.**
 - Jellyfin: jellyfin-mpv-shim is cast-only. Is a couch-browsable client wanted?
 - `hosts/htpc/hardware-configuration.nix` is still a placeholder — needs
   `nixos-generate-config` run on the real HTPC
-- Nothing has been rebuilt/booted on the actual HTPC yet
 
 ## Working conventions established so far
 

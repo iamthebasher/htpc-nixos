@@ -13,7 +13,7 @@ Ported from the old HTPC's `~/.config/mpv` on 2026-09-26.
   `{youtube_,}{upscale,anime}_{480,720,1080,native}{,_crt}` combination.
 - `scripts/auto_upscaler.lua` picks the profile on every file load: by
   resolution tier (height for 4:3, width for widescreen), SDR vs HDR (from
-  the transfer tag), 4:3 → CRT shader (`gavtroy`), YouTube → `youtube_*`.
+  the transfer tag), 4:3 → CRT shader (`gavtroy`; currently off via `CRT_ENABLED = false`), YouTube → `youtube_*`.
   `a` toggles anime (ArtCNN + CfL) vs live-action. It also switches KDE's
   HDR/WCG off for CRT content and back on at exit via `kscreen-doctor`
   (`DISPLAY_OUTPUT = "HDMI-A-1"` — check with `kscreen-doctor -o` on the HTPC).

@@ -40,7 +40,7 @@ hosts/htpc/
 modules/
   default.nix                      the full module list (used by the host and nixosModules.default)
   hardware/nvidia.nix              services.htpc.hardware.nvidia.enable
-  desktop/bigscreen.nix            services.htpc.desktop.bigscreen.enable
+  desktop/bigscreen.nix            services.htpc.desktop.bigscreen.{enable,kdeconnect.autoAcceptPairing}
   media/mpv.nix                    services.htpc.media.mpv.enable — the shared wrapper
   media/library.nix                services.htpc.media.library.{dir,group} — shared /srv/media + group
   media/stremio.nix                services.htpc.media.stremio.enable
@@ -51,7 +51,7 @@ modules/
   media/youtube.nix                services.htpc.media.youtube.enable — FreeTube + SponsorBlock
   media/dvd.nix                    services.htpc.media.dvd.{play,rip}.enable
   media/ota.nix                    services.htpc.media.ota.enable — HDHomeRun lineup -> mpv-htpc
-  media/gaming.nix                 services.htpc.gaming.{steam,moonlight}.enable
+  media/gaming.nix                 services.htpc.gaming.{steam,moonlight,heroic,lutris}.enable
   system/fake-hwclock.nix          services.htpc.system.fakeHwclock.enable — clock save/restore for dead-RTC hardware
   network/protonvpn.nix            services.htpc.network.protonvpn.enable — declarative WireGuard + nftables killswitch
 home/default.nix                   home-manager module (imported as a NixOS module, one rebuild does both)

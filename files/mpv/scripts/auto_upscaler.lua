@@ -16,6 +16,7 @@ local manual_anime_override = false
 -----------------------------------------------------
 -- CONFIG
 -----------------------------------------------------
+local CRT_ENABLED          = false         -- master switch for the CRT shader (off for now: 4:3 SDR gets the normal upscale profiles)
 local CRT_ALL_SDR          = false         -- CRT for all SDR (HDR detection confirmed working)
 
 -- mpv built-in interpolation for NON-CRT (HDR) content:
@@ -110,7 +111,7 @@ local function apply_profile(use_anime)
     local res_tier = get_res_tier(w, h)
     local use_crt  = false
 
-    if not is_hdr() then
+    if CRT_ENABLED and not is_hdr() then
         if CRT_ALL_SDR then
             use_crt = true
         else

@@ -17,7 +17,10 @@
   services.htpc = {
     hardware.nvidia.enable = true;
 
-    desktop.bigscreen.enable = true;
+    desktop.bigscreen = {
+      enable = true;
+      kdeconnect.autoAcceptPairing = true; # no mouse-only pairing dialog; trusted LAN only
+    };
 
     media = {
       mpv.enable = true;
@@ -51,6 +54,8 @@
     gaming = {
       steam.enable = true;
       moonlight.enable = true;
+      heroic.enable = true;
+      lutris.enable = true;
     };
 
     system.fakeHwclock.enable = true;
