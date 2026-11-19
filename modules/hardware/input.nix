@@ -64,7 +64,7 @@ in
     #   play/pause KEY_PLAYPAUSE zoom +/- KEY_ZOOMIN/OUT  IE KEY_WWW
     #
     # Backlight, TV (IR-learning) and air-mouse toggle send nothing: handled
-    # inside the remote. Red/green/yellow/blue: not yet captured. The
+    # inside the remote, as do red/green/yellow/blue (re-tested). The
     # keyboard side sends ordinary keys. These are already the codes remote
     # software expects, so there's no hwdb remap; player behaviour for them
     # lives in files/mpv/input.conf.
