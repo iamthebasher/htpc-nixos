@@ -185,6 +185,9 @@ the worst place to have a silent mistake.**
 - First-run in-app setup for Stremio (dedicated account + AIOStreams),
   FreeTube, jellyfin-mpv-shim, the Arr stack, Jellyfin Live TV, and MakeMKV
   (README "First-run manual steps")
+- MakeMKV: `dvd.rip` turned off 2026-11-19 because nixpkgs' makemkv-oss 2.0.0
+  fails with a hash mismatch. Turn it back on in hosts/htpc/default.nix once
+  nixpkgs fixes it
 - Pin the AIOStreams container image (currently `:latest`)
 - Stremio handoff: the old listener was never recovered, so a new one was written
   2026-09-26 (`stremio.mpvHandoff`: a user service in Python on :7777 that

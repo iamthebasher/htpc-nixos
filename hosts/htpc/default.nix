@@ -48,7 +48,9 @@
       youtube.enable = true;
       dvd = {
         play.enable = true;
-        rip.enable = true;
+        # off 2026-11-19: nixpkgs' makemkv-oss 2.0.0 fails with a hash mismatch
+        # (upstream re-uploaded the tarball). Turn back on once nixpkgs fixes it
+        rip.enable = false;
       };
       ota.enable = false; # no tuner yet — flip on once an HDHomeRun is on the LAN
 
@@ -85,6 +87,10 @@
   # nvidia drivers, steam, etc. Must be set as a module option — see the
   # comment in flake.nix's let block for why it can't live there.
   nixpkgs.config.allowUnfree = true;
+
+  # `nix shell`, `nix flake ...` etc. on the box itself (nixos-rebuild --flake
+  # enables these for its own run only)
+  nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
   networking.hostName = "htpc";
   time.timeZone = "America/New_York"; # adjust if this ever isn't true
