@@ -31,6 +31,11 @@ journal (`journalctl -u input-udev-log`) and installs evtest, libinput and
 `input-report`. Key presses are deliberately not logged, since a keyboard
 log would capture passwords. Button codes are captured on demand instead.
 Per-device keymaps (hwdb) go in this module once the codes are known.
+
+The real `hosts/htpc/hardware-configuration.nix` was committed 2026-11-19
+(root ext4 by-uuid 3c149b35-..., no /boot or swap). It used to exist only
+uncommitted in the HTPC's clone, so the first `github:` build used the
+placeholder and failed to boot. Regenerate and commit it if the disks change.
 The MX3 Pro was mapped the same day, on the desktop rather than the HTPC. It
 already sends standard remote keycodes, so there is no hwdb remap. Its player
 bindings are in `files/mpv/input.conf`, and `remotes.mx3Pro` only stops USB
@@ -204,11 +209,6 @@ the worst place to have a silent mistake.**
   Needs a TV backend run as a container, since nixpkgs removed Tvheadend).
   Picture quality is identical either way. If USB wins, ota.nix needs rework
 - Jellyfin: jellyfin-mpv-shim is cast-only. Is a couch-browsable client wanted?
-- `hosts/htpc/hardware-configuration.nix` is still a placeholder in git. The
-  HTPC's own clone had the real file, uncommitted. On 2026-11-19 a build from
-  `github:` used the placeholder and the HTPC failed to boot (root disk
-  REPLACE-ME). The placeholder now fails the build with an assertion. Commit
-  the real file. Never build from `github:` until it's in
 
 ## Working conventions established so far
 

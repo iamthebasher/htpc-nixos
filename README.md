@@ -36,7 +36,7 @@ secrets/htpc.yaml                  encrypted secrets (create it — see Secrets 
 hosts/htpc/
   default.nix                      host glue — imports modules, sets services.htpc.* toggles
   secrets.nix                      sops secrets + the modules that need them (VPN, IPTV)
-  hardware-configuration.nix       PLACEHOLDER, regenerate on target hardware
+  hardware-configuration.nix       generated on the HTPC (regenerate if the disks change)
 modules/
   default.nix                      the full module list (used by the host and nixosModules.default)
   hardware/nvidia.nix              services.htpc.hardware.nvidia.enable
