@@ -54,6 +54,12 @@ in
 
   config = mkIf cfg.enable {
     environment.systemPackages = [ mpvHtpc mpvPkg ];
+
+    # MPRIS: puts mpv on D-Bus as a media player. Plasma sends the media
+    # keys (a remote's play/pause, next, previous) to the active MPRIS
+    # player as global shortcuts, so without this they skip mpv and go to
+    # whatever else is playing. Also what KDE Connect's media controls use.
+    services.htpc.media.mpv.scripts = [ pkgs.mpvScripts.mpris ];
   };
 
   # Exposed so other modules (stremio.nix, iptv.nix, etc.) can reference the
