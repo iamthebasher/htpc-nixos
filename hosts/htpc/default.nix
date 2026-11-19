@@ -117,6 +117,9 @@
   # for editing secrets/htpc.yaml on the box itself (`sops secrets/htpc.yaml`)
   environment.systemPackages = [ pkgs.sops pkgs.age ];
 
+  # pull this repo on the box itself (`git pull && nixos-rebuild switch`)
+  programs.git.enable = true;
+
   programs.firefox.enable = true;
   programs.neovim.enable = true;
 
