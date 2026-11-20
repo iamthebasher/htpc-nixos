@@ -94,6 +94,13 @@ in
       services.displayManager.sddm = {
         enable = true;
         wayland.enable = true;
+        # SDDM reuses the last session picked (/var/lib/sddm/state.conf)
+        # over DefaultSession below. One login to plain Plasma, deliberate or
+        # not, and every later login starts Plasma without Bigscreen's
+        # environment (PLASMA_PLATFORM=mediacenter): plain plasmashell plus a
+        # Bigscreen shell fighting over the same D-Bus name, black screen
+        # (2026-11-20). Always start the declared session instead.
+        settings.Users.RememberLastSession = false;
       };
 
       services.displayManager.defaultSession = "plasma-bigscreen-wayland";
