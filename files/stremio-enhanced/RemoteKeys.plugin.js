@@ -1,7 +1,7 @@
 /**
  * @name RemoteKeys
  * @description Remote-control buttons for Stremio's UI: Back, Search, List (library), Home.
- * @version 1.1.0
+ * @version 1.2.0
  * @author asher
  */
 // Works in both stremio-enhanced builds (Electron and the Rust/WebKit shell):
@@ -41,6 +41,15 @@
   }
 
   function back() {
+    const route = window.location.hash;
+    // Search: straight back to the Board. Stremio rewrites the address on
+    // every keystroke (#/search?search=...) and refocuses the box, so
+    // stepping back through history never gets out of it.
+    if (page(route) === "#/search") {
+      if (document.activeElement) document.activeElement.blur();
+      window.location.hash = "#/";
+      return "leave search for home";
+    }
     const el = document.activeElement;
     if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA")) {
       el.blur(); // leave the search box first; the next Back navigates
@@ -50,7 +59,6 @@
       pressEscape();
       return "close overlay";
     }
-    const route = window.location.hash;
     if (isHome(route)) return "at home, nothing to do";
     goBackFrom(page(route), 3);
     return "history.back from " + page(route);
@@ -109,5 +117,5 @@
     log(action());
   }, true);
 
-  log("running v1.1");
+  log("running v1.2");
 })();
