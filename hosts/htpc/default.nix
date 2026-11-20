@@ -112,6 +112,16 @@
 
   networking.networkmanager.enable = true;
 
+  # Straight into Bigscreen at boot, no password at the TV. Declared here so
+  # the session is the declared defaultSession (plasma-bigscreen-wayland).
+  # Auto-login set up through System Settings instead writes its own
+  # session choice to /etc/sddm.conf.d, which is how the box ended up
+  # auto-logging into plain Plasma with a black screen (2026-11-20).
+  services.displayManager.autoLogin = {
+    enable = true;
+    user = "htpc";
+  };
+
   users.users.htpc = {
     isNormalUser = true;
     extraGroups = [
