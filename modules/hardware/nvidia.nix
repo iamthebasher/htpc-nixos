@@ -34,5 +34,11 @@ in
 
     # HDR / VRR on a couch setup benefit from the newer kernel + explicit sync path
     boot.kernelParams = [ "nvidia-drm.modeset=1" ];
+
+    # Early KMS: load the driver in the initrd, so the GPU is ready before
+    # SDDM/KWin start. Without it the session can race the driver at boot:
+    # KWin got EACCES on the display, found "no outputs" and showed a black
+    # screen (2026-11-20, nothing graphics-related had changed).
+    boot.initrd.kernelModules = [ "nvidia" "nvidia_modeset" "nvidia_uvm" "nvidia_drm" ];
   };
 }
