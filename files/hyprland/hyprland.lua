@@ -45,6 +45,10 @@ hl.config({
         background_color         = "rgb(000000)",
         enable_anr_dialog        = false,  -- no "app not responding" popups needing a mouse
         focus_on_activate        = true,   -- apps raised by a handoff (mpv) get focus
+        -- only one window per workspace can be fullscreen: when mpv closes,
+        -- hand fullscreen back to the app underneath (Stremio), or it comes
+        -- back windowed with its title bar
+        exit_window_retains_fullscreen = 1,
     },
 
     cursor = {

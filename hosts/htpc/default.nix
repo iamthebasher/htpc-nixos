@@ -37,8 +37,10 @@
         # Video still plays at native 4K (fullscreen mpv isn't scaled)
         scale = 2;
       };
-      # both start windowed otherwise. Fred TV is the dev.fredol.open-tv flatpak
-      fullscreenApps = [ "moonlight" "open-tv" ];
+      # start windowed otherwise. Fred TV is the dev.fredol.open-tv flatpak;
+      # Stremio Enhanced's class is io.github.revenge977.StremioLinuxShellEnhanced
+      # (fullscreen also hides its GTK title bar)
+      fullscreenApps = [ "moonlight" "open-tv" "StremioLinuxShellEnhanced" ];
     };
 
     media = {
