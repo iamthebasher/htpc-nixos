@@ -114,6 +114,12 @@ option. Without it the killswitch would also block Moonlight→Balthasar,
 LAN clients reaching Jellyfin, and the HDHomeRun. The VPN is enabled from
 `hosts/htpc/secrets.nix`, which isn't imported until `secrets/htpc.yaml`
 exists. Neither module has been tested against real hardware or network yet.
+2026-11-20: `splitTunnel` added. `novpn <cmd>` runs a program as group
+`novpn` (via `sg`). nftables gives that group's packets wg-quick's fwmark
+(51820), so they route outside the tunnel. It also masquerades them and
+lets them through the killswitch. The killswitch moved from
+`networking.nftables.ruleset`, whose reload flushes every table including
+wg-quick's own, to `networking.nftables.tables`.
 
 **Secrets: sops-nix, not a gitignored local.nix.** The original plan was
 a gitignored `hosts/htpc/local.nix`. That can't work: flakes only copy
@@ -168,7 +174,13 @@ ContextMenu, BrowserHome in WebKit). New plugins start disabled, so a
 home-manager activation step sets them on in settings.json with jq. The
 shell only forwards console lines tagged `[Plugin]`/`[Enhanced]` to its
 terminal, which is how the plugins log. `stremio.nix` keeps a `package`
-option defaulting to plain `pkgs.stremio`.
+option defaulting to plain `pkgs.stremio`. The plugins are deployed by a
+home-manager module (`modules/home/stremio-enhanced.nix`, exported as
+`homeManagerModules.stremio-enhanced`), and `mpvHandoff.player` picks the
+player (mpv-htpc by default). Balthasar, the desktop, consumes this flake
+(2026-11-20) for Stremio, handing off to plain mpv, and for the ProtonVPN
+module. Its config is its own /etc/nixos flake, not in git. That makes
+Balthasar the first real test of protonvpn.nix.
 
 **Fred TV is a flatpak** (`dev.fredol.open-tv`, Fredolx's Open TV). It isn't
 in nixpkgs, so it's installed with nix-flatpak, declared in

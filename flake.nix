@@ -42,6 +42,11 @@
       # hosts/htpc/default.nix import the exact same set.
       nixosModules.default = import ./modules;
 
+      # home-manager side: the Stremio Enhanced plugins
+      # (programs.stremio-enhanced.plugins). Pairs with
+      # services.htpc.media.stremio.mpvHandoff for the handoff plugin.
+      homeManagerModules.stremio-enhanced = import ./modules/home/stremio-enhanced.nix;
+
       # Packages this repo builds that nixpkgs doesn't have. Usable on any
       # machine: `nix build .#stremio-linux-shell-enhanced`, or
       # `nix run .#stremio-linux-shell-enhanced`. (Nothing here is unfree,

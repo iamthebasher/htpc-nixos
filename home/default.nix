@@ -12,38 +12,11 @@
     # clone of this repo works for someone who isn't Asher.
     home.packages = [ ];
 
-    # Stremio Enhanced plugins (pkgs/stremio-linux-shell-enhanced):
-    # - MpvHandoffShell: catches Stremio's play command to the built-in
-    #   player and sends the stream to the handoff listener on 127.0.0.1:7777
-    #   (services.htpc.media.stremio.mpvHandoff), which runs mpv-htpc. Backs
-    #   out of Stremio's player screen when mpv closes.
-    # - RemoteKeys: remote Back/Search/List/Home while browsing Stremio.
-    # (files/stremio-enhanced/MpvHandoff.plugin.js is the older plugin for
-    # the Electron build, kept for anyone still on that.)
-    xdg.configFile."stremio-enhanced/plugins/MpvHandoffShell.plugin.js".source =
-      ../files/stremio-enhanced/MpvHandoffShell.plugin.js;
-    xdg.configFile."stremio-enhanced/plugins/RemoteKeys.plugin.js".source =
-      ../files/stremio-enhanced/RemoteKeys.plugin.js;
-
-    # New plugins start disabled, and switching them on in Stremio's settings
-    # needs a mouse. settings.json can't be a home-manager file because the
-    # app writes to it (theme, marketplace plugins), so set just these keys
-    # on every activation and leave the rest alone.
-    home.activation.stremioEnablePlugins = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-      f="$HOME/.config/stremio-enhanced/settings.json"
-      run mkdir -p "$(dirname "$f")"
-      [ -s "$f" ] || run sh -c 'echo "{}" > "$1"' _ "$f"
-      if new=$(${pkgs.jq}/bin/jq '
-          .enabledPlugins = ((.enabledPlugins // {}) + {
-            "MpvHandoffShell.plugin.js": true,
-            "RemoteKeys.plugin.js": true
-          })
-          | .activeTheme = (.activeTheme // null)' "$f"); then
-        run sh -c 'printf "%s\n" "$2" > "$1"' _ "$f" "$new"
-      else
-        warnEcho "stremio: $f isn't valid JSON, plugins not enabled"
-      fi
-    '';
+    # Stremio Enhanced plugins, deployed and switched on
+    # (modules/home/stremio-enhanced.nix): mpv handoff with auto-back, and
+    # the remote's Back/Search/List/Home
+    imports = [ ../modules/home/stremio-enhanced.nix ];
+    programs.stremio-enhanced.plugins = [ "MpvHandoffShell" "RemoteKeys" ];
 
     programs.home-manager.enable = true;
   };

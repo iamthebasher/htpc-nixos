@@ -6,7 +6,8 @@ let
   cfg = config.services.htpc.media.stremio;
 
   # Receives stream URLs from the Stremio Enhanced handoff plugins
-  # (files/stremio-enhanced/MpvHandoff*.plugin.js) and plays them in mpv-htpc.
+  # (files/stremio-enhanced/MpvHandoff*.plugin.js) and plays them in
+  # mpvHandoff.player (mpv-htpc by default).
   # GET /play?url= starts a stream; GET /status reports whether mpv is open. One player at a
   # time: a new URL replaces whatever the listener launched before.
   handoffListener = pkgs.writers.writePython3Bin "stremio-mpv-handoff"
@@ -16,7 +17,7 @@ let
     from http.server import BaseHTTPRequestHandler, HTTPServer
     from urllib.parse import urlparse, parse_qs
 
-    MPV = "${config.services.htpc.media.mpv.package}/bin/mpv-htpc"
+    MPV = "${cfg.mpvHandoff.player}"
     player = None
 
 
@@ -102,6 +103,19 @@ in
         in mpv-htpc (the plugin file itself is deployed by home-manager)
       '';
 
+      player = mkOption {
+        type = types.str;
+        default = "${config.services.htpc.media.mpv.package}/bin/mpv-htpc";
+        defaultText = literalExpression ''"''${config.services.htpc.media.mpv.package}/bin/mpv-htpc"'';
+        example = literalExpression ''"''${pkgs.mpv}/bin/mpv"'';
+        description = ''
+          Player the listener runs with the stream URL. The default is this
+          repo's mpv-htpc (needs services.htpc.media.mpv.enable). On a
+          machine without it, point this at a plain mpv, which then uses
+          that user's own ~/.config/mpv.
+        '';
+      };
+
       port = mkOption {
         type = types.port;
         default = 7777;
@@ -114,8 +128,10 @@ in
     {
       assertions = [
         {
-          assertion = config.services.htpc.media.mpv.enable;
-          message = "services.htpc.media.stremio requires services.htpc.media.mpv.enable = true (external-player handoff target).";
+          # only the default handoff player is mpv-htpc
+          assertion = (cfg.mpvHandoff.enable && hasSuffix "/bin/mpv-htpc" cfg.mpvHandoff.player)
+            -> config.services.htpc.media.mpv.enable;
+          message = "services.htpc.media.stremio.mpvHandoff plays in mpv-htpc by default, which needs services.htpc.media.mpv.enable = true. Or set mpvHandoff.player to another mpv.";
         }
       ];
 
