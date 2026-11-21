@@ -148,7 +148,7 @@ git-tracked files into the store, so a gitignored file is invisible and
 `pathExists` would silently skip it, leaving the VPN off with no error.
 Replaced 2026-09-25 with sops-nix, using an age key at
 `/var/lib/sops-nix/key.txt` rather than one derived from the SSH host key,
-because the box doesn't run sshd. sops secrets are runtime *files*, so
+because the box didn't run sshd then (key-only sshd for Balthasar was added 2026-11-21; the age key stays). sops secrets are runtime *files*, so
 modules only take secret *paths*. Values needed at evaluation time (VPN
 endpoint IP, peer public key) aren't secret and sit as plain values in
 secrets.nix. `modules/` doesn't depend on sops-nix, so flake-input users

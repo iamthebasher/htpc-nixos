@@ -134,6 +134,22 @@
     # hashedPasswordFile pointed at a sops secret
   };
 
+  # SSH from Balthasar, for working on the box without walking to the TV
+  # (logs, hyprctl, quickshell prototyping). Key-only: no passwords, no
+  # root login. Once secrets.nix turns the killswitch on, lanSubnets is
+  # what still lets it in.
+  services.openssh = {
+    enable = true;
+    settings = {
+      PasswordAuthentication = false;
+      KbdInteractiveAuthentication = false;
+      PermitRootLogin = "no";
+    };
+  };
+  users.users.htpc.openssh.authorizedKeys.keys = [
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAII4qCurqLwND1LFHEN4m/Mc3aImyW5DAziGSICCjfzUl balthasar"
+  ];
+
   # for editing secrets/htpc.yaml on the box itself (`sops secrets/htpc.yaml`)
   environment.systemPackages = [ pkgs.sops pkgs.age ];
 
