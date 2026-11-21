@@ -1,0 +1,109 @@
+import QtQuick
+import QtQuick.Effects
+
+// A row of AppTiles driven by the remote: Left/Right to move, OK (Enter) to
+// open. The selected app's name shows underneath.
+// Fits on screen: centred. Too many apps: full width, scrolls to keep the
+// selection in view, and the edges fade out to show there's more.
+FocusScope {
+    id: ribbon
+    property var model: []
+    property alias currentIndex: list.currentIndex
+    signal activated(var app)
+
+    readonly property real tileW: Theme.px(208)
+    readonly property real tileH: Theme.px(124)
+    readonly property real gap: Theme.px(28)
+    readonly property real edge: Theme.px(96)   // side margin, and the fade width
+    readonly property real rowWidth: model.length * tileW + Math.max(0, model.length - 1) * gap
+    readonly property bool overflows: rowWidth + 2 * edge > width
+
+    implicitHeight: list.height + Theme.px(56)
+
+    Item {
+        id: holder
+        // room above/below for the selected tile's grow
+        height: ribbon.tileH * 1.4
+        width: ribbon.overflows ? ribbon.width : ribbon.rowWidth + 2 * ribbon.edge
+        anchors.horizontalCenter: parent.horizontalCenter
+
+        // fade the edges only when scrolling is possible
+        layer.enabled: ribbon.overflows
+        layer.effect: MultiEffect {
+            maskEnabled: true
+            maskSource: fadeMask
+            maskThresholdMin: 0.0
+            maskSpreadAtMin: 1.0
+        }
+
+        ListView {
+            id: list
+            anchors.fill: parent
+            focus: true
+            orientation: ListView.Horizontal
+            spacing: ribbon.gap
+            model: ribbon.model
+            interactive: ribbon.overflows       // mouse/touch dragging
+            keyNavigationEnabled: true          // defaults to `interactive`: keep arrows working
+            keyNavigationWraps: false
+            highlightMoveDuration: Theme.anim * 2
+            leftMargin: ribbon.edge
+            rightMargin: ribbon.edge
+            preferredHighlightBegin: ribbon.edge * 1.5
+            preferredHighlightEnd: width - ribbon.edge * 1.5
+            highlightRangeMode: ribbon.overflows ? ListView.ApplyRange : ListView.NoHighlightRange
+
+            // a full-height slot per tile, so the tile centres itself
+            // vertically (ListView only manages x for a horizontal list)
+            delegate: Item {
+                id: slot
+                required property var modelData
+                required property int index
+                width: ribbon.tileW
+                height: list.height
+                AppTile {
+                    anchors.centerIn: parent
+                    app: slot.modelData
+                    selected: ribbon.activeFocus && slot.ListView.isCurrentItem
+                    track: [list.contentX, slot.x]
+                }
+            }
+
+            Keys.onReturnPressed: ribbon.activated(ribbon.model[currentIndex])
+            Keys.onEnterPressed: ribbon.activated(ribbon.model[currentIndex])
+            Keys.onSelectPressed: ribbon.activated(ribbon.model[currentIndex])
+        }
+    }
+
+    // horizontal alpha ramp: transparent edges, opaque middle
+    Item {
+        id: fadeMask
+        anchors.fill: holder
+        visible: false
+        layer.enabled: true
+        Rectangle {
+            anchors.fill: parent
+            gradient: Gradient {
+                orientation: Gradient.Horizontal
+                GradientStop { position: 0.0; color: "transparent" }
+                GradientStop { position: ribbon.edge / Math.max(1, holder.width); color: "white" }
+                GradientStop { position: 1 - ribbon.edge / Math.max(1, holder.width); color: "white" }
+                GradientStop { position: 1.0; color: "transparent" }
+            }
+        }
+    }
+
+    Text {
+        anchors { top: holder.bottom; topMargin: -Theme.px(4) }
+        x: list.currentItem ? holder.x + list.currentItem.x - list.contentX + list.currentItem.width / 2 - width / 2 : 0
+        visible: ribbon.activeFocus && list.currentItem !== null
+        text: ribbon.model[list.currentIndex] ? ribbon.model[list.currentIndex].name : ""
+        color: Theme.text
+        font.family: Theme.font
+        font.pixelSize: Theme.px(26)
+        font.weight: Font.Medium
+        style: Text.Raised
+        styleColor: "#80000000"
+        Behavior on x { NumberAnimation { duration: Theme.anim * 2; easing.type: Easing.OutCubic } }
+    }
+}

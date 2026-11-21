@@ -1,0 +1,342 @@
+# Standard icon names -> Lucide icon (https://lucide.dev/icons/<name>).
+# Each line: <context> <freedesktop-name> <lucide-name> [colour]
+#   context: actions status devices emblems places mimetypes
+#   colour:  accent (default) | warning | danger | success | fg   (theme.nix ui.*)
+# Every name is built twice: a normal icon in that colour, and <name>-symbolic,
+# outlined to filled paths so GTK can recolour it to the text colour.
+# Edit a line and rebuild to swap an icon.
+
+# ── GTK widget arrows/controls (expanders, combo boxes, spin buttons, header bars)
+actions pan-down              chevron-down
+actions pan-up                chevron-up
+actions pan-start             chevron-left
+actions pan-end               chevron-right
+actions open-menu             menu
+actions view-more             ellipsis-vertical
+actions view-more-horizontal  ellipsis
+actions window-close          x
+actions window-maximize       square
+actions window-minimize       minus
+actions window-restore        copy
+actions window-new            app-window
+actions object-select         check
+actions list-add              plus
+actions list-remove           minus
+actions list-remove-all       list-x
+actions list-drag-handle      grip-vertical
+actions edit-clear            eraser
+actions edit-clear-all        eraser
+actions selection-mode        circle-check
+actions tab-new               plus
+actions sidebar-show          panel-left
+actions sidebar-show-right    panel-right
+actions content-loading       loader
+
+# ── documents / editing
+actions document-new          file-plus
+actions document-open         folder-open
+actions document-open-recent  history
+actions document-page-setup   file-cog
+actions document-print        printer
+actions document-print-preview file-search
+actions document-properties   info
+actions document-revert       undo-2
+actions document-save         save
+actions document-save-as      save-all
+actions document-send         send
+actions document-edit         pencil
+actions edit-copy             copy
+actions edit-cut              scissors
+actions edit-delete           trash-2
+actions edit-find             search
+actions edit-find-replace     replace
+actions edit-paste            clipboard-paste
+actions edit-redo             redo-2
+actions edit-undo             undo-2
+actions edit-select-all       square-dashed
+actions folder-new            folder-plus
+actions bookmark-new          bookmark-plus
+actions insert-image          image-plus
+actions insert-link           link
+actions insert-object         package-plus
+actions insert-text           type
+actions tools-check-spelling  spell-check
+actions format-indent-less    indent-decrease
+actions format-indent-more    indent-increase
+actions format-justify-center text-align-center
+actions format-justify-fill   text-align-justify
+actions format-justify-left   text-align-start
+actions format-justify-right  text-align-end
+actions format-text-bold      bold
+actions format-text-italic    italic
+actions format-text-underline underline
+actions format-text-strikethrough strikethrough
+actions send-to               send-horizontal
+actions mark-location         map-pin
+actions find-location         locate
+actions starred               star
+actions non-starred           star
+actions semi-starred          star-half
+
+# ── navigation / view
+actions go-bottom             arrow-down-to-line
+actions go-down               arrow-down
+actions go-first              chevrons-left
+actions go-home               house
+actions go-jump               corner-down-right
+actions go-last               chevrons-right
+actions go-next               arrow-right
+actions go-previous           arrow-left
+actions go-top                arrow-up-to-line
+actions go-up                 arrow-up
+actions view-refresh          refresh-cw
+actions view-fullscreen       maximize
+actions view-restore          minimize
+actions view-reveal           eye
+actions view-conceal          eye-off
+actions view-sort-ascending   arrow-up-narrow-wide
+actions view-sort-descending  arrow-down-wide-narrow
+actions view-list             list
+actions view-grid             layout-grid
+actions view-app-grid         grid-3x3
+actions view-pin              pin
+actions view-paged            book-open
+actions view-dual             columns-2
+actions view-continuous       scroll-text
+actions zoom-in               zoom-in
+actions zoom-out              zoom-out
+actions zoom-fit-best         scan
+actions zoom-original         scan-search
+actions object-flip-horizontal flip-horizontal-2
+actions object-flip-vertical  flip-vertical-2
+actions object-rotate-left    rotate-ccw
+actions object-rotate-right   rotate-cw
+actions help-about            info
+actions help-contents         circle-question-mark
+actions help-faq              message-circle-question-mark
+
+# ── media
+actions media-eject           circle-arrow-up
+actions media-playback-pause  pause
+actions media-playback-start  play
+actions media-playback-stop   square
+actions media-record          circle-dot
+actions media-seek-backward   rewind
+actions media-seek-forward    fast-forward
+actions media-skip-backward   skip-back
+actions media-skip-forward    skip-forward
+actions media-playlist-repeat repeat
+actions media-playlist-repeat-song repeat-1
+actions media-playlist-shuffle shuffle
+actions media-playlist-consecutive list-music
+
+# ── mail / contacts / calendar
+actions address-book-new      book-user
+actions appointment-new       calendar-plus
+actions contact-new           user-plus
+actions call-start            phone
+actions call-stop             phone-off
+actions mail-forward          forward
+actions mail-mark-important   flag
+actions mail-mark-read        mail-open
+actions mail-message-new      mail-plus
+actions mail-reply-all        reply-all
+actions mail-reply-sender     reply
+actions mail-send             send
+actions mail-send-receive     mail
+actions mail-attachment       paperclip
+
+# ── system
+actions application-exit      log-out
+actions process-stop          octagon-x
+actions system-lock-screen    lock
+actions system-log-out        log-out
+actions system-reboot         refresh-cw
+actions system-run            square-terminal
+actions system-search         search
+actions system-shutdown       power
+actions system-suspend        moon
+actions preferences-system    settings
+actions emblem-system         settings
+
+# ── status: dialogs and notifications
+status dialog-information     info                  accent
+status dialog-warning         triangle-alert        warning
+status dialog-error           circle-x              danger
+status dialog-question        circle-question-mark  accent
+status dialog-password        key-round
+status security-high          shield-check          success
+status security-medium        shield                warning
+status security-low           shield-alert          danger
+status changes-allow          lock-open
+status changes-prevent        lock
+status channel-secure         lock
+status channel-insecure       lock-open             danger
+status software-update-available download
+status software-update-urgent download              danger
+status process-working        loader
+status image-loading          loader
+status image-missing          image-off
+status avatar-default         circle-user-round
+status folder-visiting        folder-open
+status task-due               calendar-clock
+status task-past-due          calendar-x            danger
+status appointment-soon       calendar-clock
+status appointment-missed     calendar-x            danger
+status mail-unread            mail
+status mail-read              mail-open
+status user-available         user-check            success
+status user-away              clock                 warning
+status user-busy              circle-minus          danger
+status user-offline           user-x
+status printer-error          printer               danger
+status printer-printing       printer
+
+# ── status: audio
+status audio-volume-high      volume-2
+status audio-volume-medium    volume-1
+status audio-volume-low       volume
+status audio-volume-muted     volume-x
+status audio-volume-overamplified volume-2          warning
+status microphone-sensitivity-high   mic
+status microphone-sensitivity-medium mic
+status microphone-sensitivity-low    mic
+status microphone-sensitivity-muted  mic-off
+status microphone-disabled    mic-off
+status camera-disabled        camera-off
+
+# ── status: power
+status battery-full           battery-full
+status battery-good           battery-full
+status battery-low            battery-low           warning
+status battery-caution        battery-low           warning
+status battery-empty          battery               danger
+status battery-missing        battery-warning
+status battery-full-charging  battery-charging      success
+status battery-good-charging  battery-charging
+status battery-low-charging   battery-charging
+status battery-caution-charging battery-charging
+status battery-full-charged   battery-full          success
+status power-profile-performance zap
+status power-profile-balanced scale
+status power-profile-power-saver leaf
+status display-brightness     sun
+status keyboard-brightness    sun-dim
+status night-light            moon
+
+# ── status: network
+status network-wireless-signal-excellent wifi
+status network-wireless-signal-good wifi-high
+status network-wireless-signal-ok   wifi-low
+status network-wireless-signal-weak wifi-zero
+status network-wireless-signal-none wifi-zero
+status network-wireless-connected   wifi
+status network-wireless-acquiring   wifi
+status network-wireless-offline     wifi-off
+status network-wireless-disabled    wifi-off
+status network-wireless-no-route    wifi-off        warning
+status network-wired          ethernet-port
+status network-wired-acquiring ethernet-port
+status network-wired-disconnected unplug
+status network-wired-offline  unplug
+status network-offline        cloud-off
+status network-idle           arrow-down-up
+status network-transmit-receive arrow-down-up
+status network-transmit       arrow-up
+status network-receive        arrow-down
+status network-error          triangle-alert        danger
+status network-vpn            shield-check
+status airplane-mode          plane
+status bluetooth-active       bluetooth
+status bluetooth-disabled     bluetooth-off
+status bluetooth-connected    bluetooth-connected
+
+# ── status: weather
+status weather-clear          sun
+status weather-clear-night    moon
+status weather-few-clouds     cloud-sun
+status weather-few-clouds-night cloud-moon
+status weather-overcast       cloud
+status weather-showers        cloud-rain
+status weather-showers-scattered cloud-drizzle
+status weather-snow           cloud-snow
+status weather-storm          cloud-lightning
+status weather-fog            cloud-fog
+status weather-severe-alert   triangle-alert        danger
+
+# ── devices
+devices audio-card            audio-waveform
+devices audio-headphones      headphones
+devices audio-headset         headset
+devices audio-input-microphone mic
+devices audio-speakers        speaker
+devices battery               battery-medium
+devices camera-photo          camera
+devices camera-video          video
+devices camera-web            webcam
+devices computer-laptop       laptop
+devices drive-optical         disc
+devices drive-multidisk       hard-drive
+devices drive-harddisk-usb    hard-drive
+devices drive-harddisk-solidstate hard-drive
+devices input-gaming          gamepad-2
+devices input-keyboard        keyboard
+devices input-mouse           mouse
+devices input-tablet          tablet
+devices input-touchpad        square-mouse-pointer
+devices media-flash           memory-stick
+devices media-floppy          save
+devices media-removable       usb
+devices media-tape            cassette-tape
+devices modem                 router
+devices multimedia-player     music
+devices network-wireless      wifi
+devices phone                 smartphone
+devices pda                   smartphone
+devices printer               printer
+devices scanner               scan-line
+devices video-display         monitor
+devices display               monitor
+devices bluetooth             bluetooth
+devices uninterruptible-power-supply plug-zap
+devices thunderbolt           zap
+devices smartcard             credit-card
+
+# ── emblems
+emblems emblem-default        circle-check          success
+emblems emblem-ok             circle-check          success
+emblems emblem-documents      file-text
+emblems emblem-downloads      download
+emblems emblem-favorite       heart
+emblems emblem-important      circle-alert          warning
+emblems emblem-mail           mail
+emblems emblem-new            sparkles
+emblems emblem-photos         image
+emblems emblem-readonly       lock
+emblems emblem-shared         share-2
+emblems emblem-symbolic-link  link
+emblems emblem-synchronized   refresh-cw
+emblems emblem-synchronizing  refresh-cw
+emblems emblem-unreadable     ban                   danger
+
+# ── extra places (the main folders come from Strata's own set, see gen.py)
+places network-server         server
+places start-here             compass
+places user-bookmarks         bookmark
+places folder-saved-search    folder-search
+places folder-recent          folder-clock
+places folder-games           gamepad-2
+places folder-downloads       download
+places folder-cloud           cloud
+places folder-git             git-branch
+places folder-code            folder-code
+
+# ── extra generic file types
+mimetypes x-office-drawing        pen-tool
+mimetypes x-office-calendar       calendar
+mimetypes x-office-address-book   book-user
+mimetypes application-x-firmware  cpu
+mimetypes application-x-sharedlib library
+mimetypes application-x-desktop   app-window
+mimetypes text-x-preview          file-search
+mimetypes model                   box

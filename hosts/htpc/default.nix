@@ -161,7 +161,18 @@
   ];
 
   # for editing secrets/htpc.yaml on the box itself (`sops secrets/htpc.yaml`)
-  environment.systemPackages = [ pkgs.sops pkgs.age ];
+  environment.systemPackages = [
+    pkgs.sops pkgs.age
+    # Icon theme shared with Balthasar: Strata (interface icons in the
+    # theme's accent, generated) over Conflux (app icons). The quickshell UI
+    # uses it (`//@ pragma IconTheme Strata` in files/quickshell/shell.qml).
+    (pkgs.callPackage ../../pkgs/strata-icon-theme { strataSrc = inputs.strata; })
+    (pkgs.callPackage ../../pkgs/conflux-icon-theme { })
+    # Strata file manager, just in case (USB drives, the media library)
+    inputs.strata.packages.${pkgs.stdenv.hostPlatform.system}.default
+  ];
+  # it answers org.freedesktop.FileManager1 ("Show in folder" from other apps)
+  services.dbus.packages = [ inputs.strata.packages.${pkgs.stdenv.hostPlatform.system}.default.fileManagerService ];
 
   # pull this repo on the box itself (`git pull && nixos-rebuild switch`)
   programs.git.enable = true;

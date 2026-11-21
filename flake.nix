@@ -26,6 +26,13 @@
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # Strata file manager (same as Balthasar). Its source also feeds
+    # pkgs/strata-icon-theme: the bundled icons and file-type tables.
+    strata = {
+      url = "github:lgse/strata";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = { self, nixpkgs, home-manager, sops-nix, nix-flatpak, disko, ... }@inputs:
