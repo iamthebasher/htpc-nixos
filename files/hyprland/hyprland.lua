@@ -45,6 +45,10 @@ hl.config({
 
     render = {
         direct_scanout = true,  -- fullscreen video skips compositing
+        -- HDR: the desktop stays SDR, and the TV switches to HDR while a
+        -- fullscreen app shows HDR content (mpv reports it through
+        -- target-colorspace-hint). Replaces the old kscreen-doctor toggle.
+        cm_auto_hdr = 1,
     },
 })
 

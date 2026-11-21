@@ -26,7 +26,7 @@ let
         output   = ${lua cfg.monitor.output},
         mode     = ${lua cfg.monitor.mode},
         position = "auto",
-        scale    = ${toString cfg.monitor.scale},
+        scale    = ${toString cfg.monitor.scale},${optionalString (cfg.monitor.bitdepth != null) "\n    bitdepth = ${toString cfg.monitor.bitdepth},"}
     })
   ''
   + concatStrings (imap1 (i: re: ''
@@ -73,6 +73,16 @@ in
         type = types.either types.int types.float;
         default = 1;
         description = "Output scale. Quickshell sizes its own UI, so 1 is usually right even at 4K.";
+      };
+      bitdepth = mkOption {
+        type = types.nullOr (types.enum [ 8 10 ]);
+        default = null;
+        example = 10;
+        description = ''
+          Output bit depth; null leaves Hyprland's default (8). 10 avoids
+          banding and is what HDR is sent at. Check that the TV still shows
+          a picture: 4K at 120 Hz in 10-bit needs a full HDMI 2.1 link.
+        '';
       };
     };
 

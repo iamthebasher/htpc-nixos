@@ -72,6 +72,27 @@ rewritten without kscreen-doctor. nvidia.nix gained the Hyprland-wiki
 session variables and nvidia-vaapi-driver. The `disko` flake input still
 needs `nix flake lock`. Next up: scripting and prototyping the quickshell UI.
 
+2026-11-21: reinstalled. It boots UEFI through Limine into Hyprland, and
+Balthasar can SSH in (htpc@192.168.50.52, Wi-Fi, key-only). The TV is an LG
+reporting HDR, BT.2020 and VRR. It runs 3840x2160@119.88 at 10-bit
+(`monitor.mode`/`bitdepth`, tested live with `hyprctl eval`). mpv under
+Hyprland closed instantly ("wp_color_manager_v1: CM Surface already
+exists", then VK_ERROR_SURFACE_LOST_KHR). Bisected to `force-window=immediate`
+with Vulkan: plain `mpv --no-config --vo=gpu-next --gpu-api=vulkan
+--force-window=immediate` reproduces it, while yes/no and OpenGL don't.
+mpv.conf now has `force-window=yes`, `gpu-api=vulkan` (no longer dithers to
+8-bit) and `target-colorspace-hint-mode=source`. Hyprland's
+`render.cm_auto_hdr` then switches HDR per video. That was verified with
+drm_info on the HDMI connector (Colorspace=BT2020_RGB for an HDR source,
+Default for SDR). `hyprctl monitors`' colorManagementPreset does NOT show
+the auto-HDR state. Rejected alternatives: OpenGL (8-bit only, since 10-bit
+`--egl-output-format` segfaults on NVIDIA EGL) and nested gamescope (mpv
+gets a 10-bit HDR10 swapchain via gamescope-wsi, but gamescope's Wayland
+backend output never switches Hyprland to HDR). A bug report draft for the
+force-window issue is pending. Debugging over SSH needs XDG_RUNTIME_DIR,
+WAYLAND_DISPLAY=wayland-1 and HYPRLAND_INSTANCE_SIGNATURE (ls
+/run/user/1000/hypr). jq isn't installed on the box.
+
 Asher runs all `nix` commands (`nix flake check`, `nixos-rebuild`, etc.)
 himself — edit files, then hand off for verification.
 

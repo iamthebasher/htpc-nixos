@@ -28,9 +28,11 @@ local NONCRT_TSCALE        = "oversample"
 
 local DISPLAY_OUTPUT       = "HDMI-A-1"   -- from `hyprctl monitors`
 local DESKTOP_HDR_DEFAULT  = true         -- desktop's normal HDR state, restored on exit
--- OFF since the move to Hyprland (2026-11-20): the toggle below calls
--- kscreen-doctor, which is KDE-only. To be rewritten for Hyprland's
--- monitor colour management in the scripting phase, then switched back on.
+-- OFF for good since the move to Hyprland (2026-11-20). Hyprland switches
+-- the TV to HDR by itself while a fullscreen app shows HDR
+-- (render.cm_auto_hdr, on by default), and mpv already reports what it plays
+-- (vo=gpu-next + target-colorspace-hint=yes in mpv.conf). The toggle below
+-- calls kscreen-doctor, which is KDE-only; it's kept only for the CRT idea.
 local MANAGE_DISPLAY_HDR   = false        -- master switch for the display HDR/WCG toggle
 
 local display_is_crt = nil

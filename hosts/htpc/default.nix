@@ -28,7 +28,12 @@
     desktop.hyprland = {
       enable = true;
       autologin.user = "htpc";
-      monitor.output = "HDMI-A-1"; # the TV; check with `hyprctl monitors`
+      monitor = {
+        output = "HDMI-A-1"; # the LG TV; check with `hyprctl monitors`
+        # its fastest 4K mode; "preferred" picked 60 Hz. Tested live 2026-11-21
+        mode = "3840x2160@119.88";
+        bitdepth = 10;
+      };
       # both start windowed otherwise. Fred TV is the dev.fredol.open-tv flatpak
       fullscreenApps = [ "moonlight" "open-tv" ];
     };
