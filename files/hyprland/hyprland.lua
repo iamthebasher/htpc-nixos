@@ -14,12 +14,20 @@
 
 hl.config({
     general = {
-        -- every app is effectively fullscreen on a TV: no gaps or borders
+        -- monocle: every tiled app fills the screen and the focused one is
+        -- on top (SUPER+TAB cycles). No side-by-side splits on a TV.
         gaps_in     = 0,
         gaps_out    = 0,
         border_size = 0,
-        layout      = "dwindle",
+        layout      = "monocle",
         allow_tearing = false,
+    },
+
+    -- With the TV at scale 2, X11 apps (Steam) would otherwise be upscaled
+    -- and blurry. They render at native 4K instead and scale their own UI
+    -- (STEAM_FORCE_DESKTOPUI_SCALING, set in modules/desktop/hyprland.nix).
+    xwayland = {
+        force_zero_scaling = true,
     },
 
     decoration = {
@@ -28,7 +36,7 @@ hl.config({
         blur     = { enabled = true, size = 6, passes = 2 }, -- for quickshell overlays later
     },
 
-    animations = { enabled = true },
+    animations = { enabled = true },  -- calm curves below, nothing bouncy
 
     misc = {
         disable_hyprland_logo    = true,
@@ -51,6 +59,17 @@ hl.config({
         cm_auto_hdr = 1,
     },
 })
+
+-- Calm, short animations: plain ease-out, small pop-in, fades between
+-- workspaces. Hyprland's defaults overshoot and slide, which looks frantic
+-- on a big screen.
+hl.curve("calm", { type = "bezier", points = { {0.25, 0.1}, {0.25, 1.0} } })
+hl.animation({ leaf = "windows",     enabled = true, speed = 4, bezier = "calm", style = "popin 95%" })
+hl.animation({ leaf = "windowsOut",  enabled = true, speed = 3, bezier = "calm", style = "popin 95%" })
+hl.animation({ leaf = "windowsMove", enabled = true, speed = 4, bezier = "calm" })
+hl.animation({ leaf = "fade",        enabled = true, speed = 4, bezier = "calm" })
+hl.animation({ leaf = "layers",      enabled = true, speed = 3, bezier = "calm", style = "fade" })
+hl.animation({ leaf = "workspaces",  enabled = true, speed = 4, bezier = "calm", style = "fade" })
 
 ---------------
 ---- INPUT ----
@@ -76,6 +95,7 @@ local mainMod = "SUPER"
 hl.bind(mainMod .. " + RETURN",    hl.dsp.exec_cmd("foot"))
 hl.bind(mainMod .. " + SHIFT + Q", hl.dsp.window.close())
 hl.bind(mainMod .. " + F",         hl.dsp.window.fullscreen())
+hl.bind(mainMod .. " + TAB",       hl.dsp.window.cycle_next())  -- next app (monocle shows one at a time)
 hl.bind(mainMod .. " + SPACE",     hl.dsp.exec_cmd("fuzzel"))
 hl.bind("XF86HomePage",            hl.dsp.exec_cmd("fuzzel"))
 

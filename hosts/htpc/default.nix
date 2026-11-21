@@ -33,6 +33,9 @@
         # its fastest 4K mode; "preferred" picked 60 Hz. Tested live 2026-11-21
         mode = "3840x2160@119.88";
         bitdepth = 10;
+        # 4K drawn as a 1920x1080 desktop: apps and text at TV size.
+        # Video still plays at native 4K (fullscreen mpv isn't scaled)
+        scale = 2;
       };
       # both start windowed otherwise. Fred TV is the dev.fredol.open-tv flatpak
       fullscreenApps = [ "moonlight" "open-tv" ];

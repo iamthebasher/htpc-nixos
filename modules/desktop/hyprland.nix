@@ -86,6 +86,31 @@ in
       };
     };
 
+    cursor = {
+      package = mkOption {
+        type = types.package;
+        default = pkgs.bibata-cursors;
+        defaultText = literalExpression "pkgs.bibata-cursors";
+        description = "Package providing the cursor theme.";
+      };
+      theme = mkOption {
+        type = types.str;
+        default = "Bibata-Modern-Ice";
+        description = "Cursor theme name (a directory in the package's share/icons).";
+      };
+      size = mkOption {
+        type = types.int;
+        default = 32;
+        description = "Cursor size in logical pixels, multiplied by monitor.scale. Big, for an air mouse across the room.";
+      };
+    };
+
+    fontSize = mkOption {
+      type = types.int;
+      default = 14;
+      description = "Font size (pt, before monitor.scale) for the maintenance terminal (foot) and the launcher (fuzzel).";
+    };
+
     fullscreenApps = mkOption {
       type = types.listOf types.str;
       default = [ ];
@@ -123,7 +148,53 @@ in
         foot        # SUPER+RETURN: a terminal for maintenance
         fuzzel      # launcher on Home / SUPER+SPACE until quickshell
         playerctl   # media keys -> MPRIS
+        cfg.cursor.package
       ];
+
+      # Session-wide, so Hyprland, Wayland apps and XWayland apps agree.
+      # Hyprland is started from the login shell, which has these.
+      environment.sessionVariables = {
+        XCURSOR_THEME = cfg.cursor.theme;
+        XCURSOR_SIZE = toString cfg.cursor.size;
+        HYPRCURSOR_SIZE = toString cfg.cursor.size;
+        # Steam is an X11 app: with xwayland.force_zero_scaling it renders
+        # at native resolution and needs its own UI scale to match the TV's
+        STEAM_FORCE_DESKTOPUI_SCALING = toString cfg.monitor.scale;
+      };
+
+      # Readable from the couch. System-wide defaults in /etc/xdg; a user
+      # ~/.config file would override them.
+      environment.etc."xdg/foot/foot.ini".text = ''
+        font=monospace:size=${toString cfg.fontSize}
+        pad=12x12
+
+        [colors]
+        alpha=0.95
+      '';
+      environment.etc."xdg/fuzzel/fuzzel.ini".text = ''
+        [main]
+        font=sans:size=${toString (cfg.fontSize + 6)}
+        terminal=foot
+        width=40
+        lines=10
+        horizontal-pad=32
+        vertical-pad=24
+        inner-pad=12
+        icon-theme=hicolor
+
+        [colors]
+        background=101418f0
+        text=e6e6e6ff
+        match=4fc3f7ff
+        selection=2a3540ff
+        selection-text=ffffffff
+        selection-match=4fc3f7ff
+        border=4fc3f7ff
+
+        [border]
+        width=2
+        radius=12
+      '';
 
       # file pickers etc. (xdg-desktop-portal-hyprland has no FileChooser)
       xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
