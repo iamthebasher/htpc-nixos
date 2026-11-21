@@ -90,9 +90,9 @@ hl.config({
 ---------------------
 ---- KEYBINDINGS ----
 ---------------------
--- Keyboard binds for maintenance; the remote's own keys (arrows, OK, Back,
--- Home) go straight to the focused app. Home gets the launcher until
--- quickshell replaces it.
+-- Keyboard binds for maintenance; the remote's own keys (arrows, OK, Back)
+-- go straight to the focused app. Home and Search (+ SUPER+SPACE) are in
+-- the generated part: the quickshell UI if it's enabled, fuzzel otherwise.
 
 local mainMod = "SUPER"
 
@@ -100,8 +100,6 @@ hl.bind(mainMod .. " + RETURN",    hl.dsp.exec_cmd("foot"))
 hl.bind(mainMod .. " + SHIFT + Q", hl.dsp.window.close())
 hl.bind(mainMod .. " + F",         hl.dsp.window.fullscreen())
 hl.bind(mainMod .. " + TAB",       hl.dsp.window.cycle_next())  -- next app (monocle shows one at a time)
-hl.bind(mainMod .. " + SPACE",     hl.dsp.exec_cmd("fuzzel"))
-hl.bind("XF86HomePage",            hl.dsp.exec_cmd("fuzzel"))
 
 hl.bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left" }))
 hl.bind(mainMod .. " + right", hl.dsp.focus({ direction = "right" }))
@@ -136,3 +134,13 @@ hl.window_rule({ name = "modal-float", match = { modal = true }, float = true, c
 
 -- Steam: everything except the main window floats (friends, settings, login...)
 hl.window_rule({ name = "steam-popups", match = { class = "^steam$", title = "negative:^Steam$" }, float = true })
+
+-- Quickshell UI overlays (ribbon over apps, launcher, settings): real glass,
+-- blurring the app behind. ignore_alpha keeps the faint top of the dimming
+-- gradient sharp; the panels and the darker dim get the blur.
+hl.layer_rule({
+    name  = "htpc-overlay-blur",
+    match = { namespace = "^htpc-overlay$" },
+    blur  = true,
+    ignore_alpha = 0.25,
+})

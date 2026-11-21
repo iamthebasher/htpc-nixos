@@ -9,6 +9,8 @@ Item {
     required property var app
     property bool selected: false
     property var track: 0   // the ribbon's scroll position, for the glass blur
+    // what the glass blurs; null on the TV overlay layer (Hyprland blurs there)
+    property Item glassBackdrop: Theme.backdrop
 
     width: Theme.px(208)
     height: Theme.px(124)
@@ -24,6 +26,7 @@ Item {
         id: card
         anchors.fill: parent
         radius: Theme.px(20)
+        backdrop: tile.glassBackdrop
         active: tile.selected
         elevated: tile.selected
         fill: tile.selected ? Theme.glassStrong : Theme.glass

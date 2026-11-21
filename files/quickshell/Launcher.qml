@@ -8,6 +8,8 @@ FocusScope {
     id: launcher
     property bool open: false
     signal closeRequested()
+    // what the glass blurs; null on the TV overlay layer (Hyprland blurs there)
+    property Item glassBackdrop: Theme.backdrop
 
     visible: opacity > 0
     opacity: open ? 1 : 0
@@ -51,6 +53,7 @@ FocusScope {
         anchors { horizontalCenter: parent.horizontalCenter; top: parent.top; topMargin: Theme.px(150) }
         radius: Theme.px(28)
         fill: Theme.glassStrong
+        backdrop: launcher.glassBackdrop
         active: true
         elevated: true
         scale: launcher.open ? 1 : 0.96

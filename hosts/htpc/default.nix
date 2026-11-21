@@ -41,6 +41,8 @@
       # Stremio Enhanced's class is io.github.revenge977.StremioLinuxShellEnhanced
       # (fullscreen also hides its GTK title bar)
       fullscreenApps = [ "moonlight" "open-tv" "StremioLinuxShellEnhanced" ];
+      # the TV UI (files/quickshell): home screen, ribbon, launcher, settings
+      shell.enable = true;
     };
 
     media = {

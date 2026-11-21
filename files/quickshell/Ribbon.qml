@@ -10,6 +10,7 @@ FocusScope {
     property var model: []
     property alias currentIndex: list.currentIndex
     signal activated(var app)
+    property Item glassBackdrop: Theme.backdrop   // passed to the tiles
 
     readonly property real tileW: Theme.px(208)
     readonly property real tileH: Theme.px(124)
@@ -26,15 +27,6 @@ FocusScope {
         height: ribbon.tileH * 1.4
         width: ribbon.overflows ? ribbon.width : ribbon.rowWidth + 2 * ribbon.edge
         anchors.horizontalCenter: parent.horizontalCenter
-
-        // fade the edges only when scrolling is possible
-        layer.enabled: ribbon.overflows
-        layer.effect: MultiEffect {
-            maskEnabled: true
-            maskSource: fadeMask
-            maskThresholdMin: 0.0
-            maskSpreadAtMin: 1.0
-        }
 
         ListView {
             id: list
@@ -61,35 +53,23 @@ FocusScope {
                 required property int index
                 width: ribbon.tileW
                 height: list.height
+                // edge fade when the row scrolls: tiles near or past the
+                // screen edge fade out, hinting there's more that way
+                readonly property real onScreenX: x - list.contentX
+                readonly property real edgeRoom: Math.min(onScreenX, list.width - onScreenX - width)
+                opacity: ribbon.overflows ? Math.max(0.08, Math.min(1, (edgeRoom + width * 0.25) / ribbon.edge)) : 1
                 AppTile {
                     anchors.centerIn: parent
                     app: slot.modelData
                     selected: ribbon.activeFocus && slot.ListView.isCurrentItem
                     track: [list.contentX, slot.x]
+                    glassBackdrop: ribbon.glassBackdrop
                 }
             }
 
             Keys.onReturnPressed: ribbon.activated(ribbon.model[currentIndex])
             Keys.onEnterPressed: ribbon.activated(ribbon.model[currentIndex])
             Keys.onSelectPressed: ribbon.activated(ribbon.model[currentIndex])
-        }
-    }
-
-    // horizontal alpha ramp: transparent edges, opaque middle
-    Item {
-        id: fadeMask
-        anchors.fill: holder
-        visible: false
-        layer.enabled: true
-        Rectangle {
-            anchors.fill: parent
-            gradient: Gradient {
-                orientation: Gradient.Horizontal
-                GradientStop { position: 0.0; color: "transparent" }
-                GradientStop { position: ribbon.edge / Math.max(1, holder.width); color: "white" }
-                GradientStop { position: 1 - ribbon.edge / Math.max(1, holder.width); color: "white" }
-                GradientStop { position: 1.0; color: "transparent" }
-            }
         }
     }
 

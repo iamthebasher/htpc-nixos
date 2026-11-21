@@ -1,41 +1,31 @@
 import QtQuick
 import Quickshell
-import Quickshell.Io
 
-// Everything the shell shows, in one item, plus the remote-key logic:
-//   Home   -> home screen, or the ribbon over the open app
-//   Search -> launcher
-//   Back   -> close whatever is open
-// On the TV the keys arrive from Hyprland binds (`qs ipc call shell ...`).
-// In the dev window on Balthasar: H = Home, / = Search, A = fake app, Esc = Back.
+// The dev version: everything in one item, for a window on Balthasar.
+// (The TV splits it across two layer-shell windows: TvShell.qml.)
+// Keys standing in for the remote: H = Home, / = Search, A = pretend app,
+// Esc = Back.
 FocusScope {
     id: root
-    property bool dev: false
-    property string mode: "home"      // "home" | "switcher" | "launcher" | "settings"
-    property bool appOpen: false      // dev only: a pretend app covering home
 
     Binding { target: Theme; property: "s"; value: Math.min(root.width / 1920, root.height / 1080) }
     Binding { target: Theme; property: "backdrop"; value: scene }
+    Component.onCompleted: ShellState.dev = true
 
-    function home() {
-        if (mode !== "home") { mode = "home"; return; }
-        if (appOpen) mode = "switcher";
-    }
-    function search() { mode = (mode === "launcher") ? "home" : "launcher"; }
-    function back() { mode = "home"; }
-
-    // Keep keyboard focus somewhere that reaches these handlers: hiding the
-    // home screen (pretend app) would otherwise leave focus on nothing.
+    // Keep keyboard focus somewhere that reaches the key handler below:
+    // hiding the home screen (pretend app) would otherwise leave it nowhere.
     function refocus() {
-        if (mode !== "home") return;
+        if (ShellState.mode !== "home") return;
         if (homeScreen.visible) homeScreen.forceActiveFocus();
         else root.forceActiveFocus();
     }
-    onModeChanged: refocus()
-    onAppOpenChanged: Qt.callLater(refocus)
+    Connections {
+        target: ShellState
+        function onModeChanged() { root.refocus(); }
+        function onDevAppOpenChanged() { Qt.callLater(root.refocus); }
+    }
 
-    // What the glass blurs: the backdrop, plus (dev) the pretend app.
-    // Kept apart from the panels themselves, which can't blur their own window.
+    // What the glass blurs: the backdrop, plus the pretend app.
     Item {
         id: scene
         anchors.fill: parent
@@ -44,7 +34,7 @@ FocusScope {
 
         Rectangle {
             anchors.fill: parent
-            visible: root.dev && root.appOpen
+            visible: ShellState.devAppOpen
             gradient: Gradient {
                 GradientStop { position: 0.0; color: "#3a2a5c" }
                 GradientStop { position: 1.0; color: "#1c3b4a" }
@@ -62,47 +52,21 @@ FocusScope {
         id: homeScreen
         anchors.fill: parent
         focus: true
-        visible: !(root.dev && root.appOpen)
-        onSettingsRequested: root.mode = "settings"
+        visible: !ShellState.devAppOpen
+        onSettingsRequested: ShellState.settings()
     }
 
-    RibbonOverlay {
-        anchors.fill: parent
-        open: root.mode === "switcher"
-        onCloseRequested: root.back()
-    }
+    RibbonOverlay { anchors.fill: parent; open: ShellState.mode === "switcher"; onCloseRequested: ShellState.back() }
+    Launcher      { anchors.fill: parent; open: ShellState.mode === "launcher"; onCloseRequested: ShellState.back() }
+    SettingsPanel { anchors.fill: parent; open: ShellState.mode === "settings"; onCloseRequested: ShellState.back() }
 
-    Launcher {
-        anchors.fill: parent
-        open: root.mode === "launcher"
-        onCloseRequested: root.back()
-    }
-
-    SettingsPanel {
-        anchors.fill: parent
-        open: root.mode === "settings"
-        onCloseRequested: root.back()
-    }
-
-    // remote keys that nothing else handled
     Keys.onPressed: event => {
         const k = event.key;
-        if (k === Qt.Key_HomePage || (root.dev && k === Qt.Key_H)) root.home();
-        else if (k === Qt.Key_Search || (root.dev && k === Qt.Key_Slash)) root.search();
-        else if (k === Qt.Key_Back || k === Qt.Key_Escape) root.back();
-        else if (root.dev && k === Qt.Key_A) { root.appOpen = !root.appOpen; root.mode = "home"; }
+        if (k === Qt.Key_HomePage || k === Qt.Key_H) ShellState.home();
+        else if (k === Qt.Key_Search || k === Qt.Key_Slash) ShellState.search();
+        else if (k === Qt.Key_Back || k === Qt.Key_Escape) ShellState.back();
+        else if (k === Qt.Key_A) { ShellState.devAppOpen = !ShellState.devAppOpen; ShellState.mode = "home"; }
         else return;
         event.accepted = true;
-    }
-
-    // `qs ipc call shell home|search|back` (Hyprland binds on the TV)
-    IpcHandler {
-        target: "shell"
-        function home(): void { root.home(); }
-        function search(): void { root.search(); }
-        function back(): void { root.back(); }
-        // dev: toggle the pretend app
-        function fakeApp(): void { root.appOpen = !root.appOpen; root.mode = "home"; }
-        function settings(): void { root.mode = "settings"; }
     }
 }

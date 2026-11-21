@@ -6,15 +6,37 @@ with lib;
 # No display manager: getty auto-logs the user in on tty1 and the login
 # shell execs Hyprland (the same setup as Balthasar, the desktop). The config is
 # fully declarative: files/hyprland/hyprland.lua plus the generated part
-# below, installed as /etc/htpc/hyprland.lua. The TV UI (launcher, overlays)
-# comes later from quickshell; until then fuzzel is on the remote's Home key.
+# below, installed as /etc/htpc/hyprland.lua. The TV UI (home screen,
+# ribbon, launcher, settings) is the quickshell config in files/quickshell
+# (shell.enable); without it, fuzzel is on the remote's Home/Search keys.
 
 let
   cfg = config.services.htpc.desktop.hyprland;
   configPath = "/etc/htpc/hyprland.lua";
+  shellDir = "/etc/htpc/quickshell";
+  qs = "${cfg.shell.package}/bin/qs";
+  shellIpc = fn: "${qs} -p ${shellDir} ipc call shell ${fn}";
 
   # Nix string -> Lua string literal. JSON escapes (\" \\ \n \t) are valid Lua.
   lua = builtins.toJSON;
+
+  # The remote's Home (+ SUPER+SPACE on a keyboard): the quickshell UI, or
+  # fuzzel. Search is deliberately NOT bound with the shell: it should reach
+  # the focused app (Stremio has its own search), and the shell's home screen
+  # gets it directly when it has focus (nothing open).
+  launcherBinds =
+    if cfg.shell.enable then ''
+
+      hl.bind("XF86HomePage",  hl.dsp.exec_cmd(${lua (shellIpc "home")}))
+      hl.bind("SUPER + SPACE", hl.dsp.exec_cmd(${lua (shellIpc "search")}))
+    '' else ''
+
+      hl.bind("XF86HomePage",  hl.dsp.exec_cmd("fuzzel"))
+      hl.bind("XF86Search",    hl.dsp.exec_cmd("fuzzel"))
+      hl.bind("SUPER + SPACE", hl.dsp.exec_cmd("fuzzel"))
+    '';
+
+  autostart = optional cfg.shell.enable "env HTPC_SHELL=tv ${qs} -p ${shellDir}" ++ cfg.autostart;
 
   generated = ''
 
@@ -32,10 +54,11 @@ let
   + concatStrings (imap1 (i: re: ''
     hl.window_rule({ name = "htpc-fullscreen-${toString i}", match = { class = ${lua "(?i)${re}"} }, fullscreen = true })
   '') cfg.fullscreenApps)
-  + optionalString (cfg.autostart != [ ]) ''
+  + launcherBinds
+  + optionalString (autostart != [ ]) ''
 
     hl.on("hyprland.start", function ()
-    ${concatMapStrings (c: "    hl.exec_cmd(${lua c})\n") cfg.autostart}end)
+    ${concatMapStrings (c: "    hl.exec_cmd(${lua c})\n") autostart}end)
   ''
   + optionalString (cfg.extraConfig != "") ''
 
@@ -108,7 +131,24 @@ in
     fontSize = mkOption {
       type = types.int;
       default = 14;
-      description = "Font size (pt, before monitor.scale) for the maintenance terminal (foot) and the launcher (fuzzel).";
+      description = "Font size (pt, before monitor.scale) for the maintenance terminal (foot) and the fallback launcher (fuzzel).";
+    };
+
+    shell = {
+      enable = mkEnableOption ''
+        the quickshell TV UI (files/quickshell): home screen with the app
+        ribbon and the time/weather pill, the ribbon over open apps (Home),
+        the launcher (Search) and settings. Started with Hyprland; the
+        remote's Home and Search keys call it. Settings it saves (weather
+        location, wallpaper, app cards) live in quickshell's state directory
+        on the machine, not in Nix
+      '';
+      package = mkOption {
+        type = types.package;
+        default = pkgs.quickshell;
+        defaultText = literalExpression "pkgs.quickshell";
+        description = "Quickshell package.";
+      };
     };
 
     fullscreenApps = mkOption {
@@ -146,10 +186,9 @@ in
 
       environment.systemPackages = with pkgs; [
         foot        # SUPER+RETURN: a terminal for maintenance
-        fuzzel      # launcher on Home / SUPER+SPACE until quickshell
         playerctl   # media keys -> MPRIS
         cfg.cursor.package
-      ];
+      ] ++ (if cfg.shell.enable then [ cfg.shell.package ] else [ fuzzel ]);
 
       # Session-wide, so Hyprland, Wayland apps and XWayland apps agree.
       # Hyprland is started from the login shell, which has these.
@@ -171,6 +210,7 @@ in
         [colors]
         alpha=0.95
       '';
+      environment.etc."xdg/fuzzel/fuzzel.ini".enable = !cfg.shell.enable;
       environment.etc."xdg/fuzzel/fuzzel.ini".text = ''
         [main]
         font=sans:size=${toString (cfg.fontSize + 6)}
@@ -206,6 +246,11 @@ in
       };
       security.rtkit.enable = mkDefault true;
     }
+
+    (mkIf cfg.shell.enable {
+      # the UI's QML files; quickshell reloads them when they change
+      environment.etc."htpc/quickshell".source = ../../files/quickshell;
+    })
 
     (mkIf (cfg.autologin.user != null) {
       services.getty.autologinUser = cfg.autologin.user;

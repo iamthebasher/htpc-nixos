@@ -6,6 +6,8 @@ FocusScope {
     id: overlay
     property bool open: false
     signal closeRequested()
+    // what the glass blurs; null on the TV overlay layer (Hyprland blurs there)
+    property Item glassBackdrop: Theme.backdrop
 
     visible: opacity > 0
     opacity: open ? 1 : 0
@@ -28,6 +30,7 @@ FocusScope {
         anchors.bottomMargin: overlay.open ? Theme.px(8) : -Theme.px(200)
         Behavior on anchors.bottomMargin { NumberAnimation { duration: Theme.anim * 1.5; easing.type: Easing.OutCubic } }
         model: Apps.switcher
+        glassBackdrop: overlay.glassBackdrop
         onActivated: app => { overlay.closeRequested(); Apps.activate(app); }
         Keys.onEscapePressed: overlay.closeRequested()
         Keys.onBackPressed: overlay.closeRequested()

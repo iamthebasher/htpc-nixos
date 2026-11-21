@@ -12,6 +12,8 @@ FocusScope {
     id: panelRoot
     property bool open: false
     signal closeRequested()
+    // what the glass blurs; null on the TV overlay layer (Hyprland blurs there)
+    property Item glassBackdrop: Theme.backdrop
 
     property string page: "main"      // main | city | cards | image
     property var matches: []          // city search results
@@ -115,6 +117,7 @@ FocusScope {
         anchors { horizontalCenter: parent.horizontalCenter; top: parent.top; topMargin: Theme.px(130) }
         radius: Theme.px(28)
         fill: Theme.glassStrong
+        backdrop: panelRoot.glassBackdrop
         active: true
         elevated: true
         scale: panelRoot.open ? 1 : 0.96

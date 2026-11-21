@@ -98,6 +98,32 @@ backend output never switches Hyprland to HDR). Debugging over SSH needs XDG_RUN
 WAYLAND_DISPLAY=wayland-1 and HYPRLAND_INSTANCE_SIGNATURE (ls
 /run/user/1000/hypr). jq isn't installed on the box.
 
+2026-11-21, the TV UI: a quickshell config in `files/quickshell` (quickshell
+0.3.2), enabled with `services.htpc.desktop.hyprland.shell.enable`. It's
+deployed to /etc/htpc/quickshell and autostarted with `HTPC_SHELL=tv`.
+Without that variable it opens as a 1280x720 dev window, which is how it's
+prototyped on Balthasar (`quickshell -p ~/projects/htpc-nixos/files/quickshell`;
+H/`/`/A/Esc stand in for Home/Search/pretend app/Back). On the TV
+(TvShell.qml) the home screen is a background-layer window. Home = an
+empty workspace, and that window takes the keys only when nothing covers it.
+The ribbon over apps, the launcher and settings are an overlay-layer window
+("htpc-overlay", blurred by a Hyprland layer rule), mapped only while open.
+The remote's Home is a Hyprland bind (`qs ipc call shell home`): over an
+app it shows the ribbon, a second press goes home. Search is deliberately
+NOT bound, so apps like Stremio keep their own search; the home screen
+gets it when focused. Look: Balthasar's glass (theme.nix colours, sunlit
+edges, shadows, in-window blur of the backdrop) and the Strata icon theme
+(pkgs/strata-icon-theme, copied from Balthasar, over Conflux). Settings
+the user changes (weather location, wallpaper + rotation, per-app card
+images) are saved by Prefs.qml in quickshell's state dir on the machine,
+never in the repo. Wallpapers come from ~/Pictures/wallpaper and cards from
+~/Pictures/htpc-cards. Gotchas found: don't name a singleton `State` (it
+clashes with QtQuick's State type, so properties read undefined); inline
+`component` declarations failed in this Qt, so use separate files; ListView
+key navigation is tied to `interactive` unless keyNavigationEnabled is set;
+the IconTheme pragma only applies on a full restart, not a hot reload. The
+Strata file manager is installed too (the strata input is a full flake).
+
 Asher runs all `nix` commands (`nix flake check`, `nixos-rebuild`, etc.)
 himself — edit files, then hand off for verification.
 
