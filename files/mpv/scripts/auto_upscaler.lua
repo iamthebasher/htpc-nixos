@@ -26,9 +26,12 @@ local CRT_ALL_SDR          = false         -- CRT for all SDR (HDR detection con
 local NONCRT_INTERP        = true
 local NONCRT_TSCALE        = "oversample"
 
-local DISPLAY_OUTPUT       = "HDMI-A-1"   -- from `kscreen-doctor -o`
+local DISPLAY_OUTPUT       = "HDMI-A-1"   -- from `hyprctl monitors`
 local DESKTOP_HDR_DEFAULT  = true         -- desktop's normal HDR state, restored on exit
-local MANAGE_DISPLAY_HDR   = true         -- master switch for the KDE HDR/WCG toggle
+-- OFF since the move to Hyprland (2026-11-20): the toggle below calls
+-- kscreen-doctor, which is KDE-only. To be rewritten for Hyprland's
+-- monitor colour management in the scripting phase, then switched back on.
+local MANAGE_DISPLAY_HDR   = false        -- master switch for the display HDR/WCG toggle
 
 local display_is_crt = nil
 

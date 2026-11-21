@@ -54,29 +54,50 @@ autosuspend for its receiver. The red/green/yellow/blue buttons send nothing
 (re-tested), likely IR-learning keys like TV. Bigscreen's handling of Back and Home has not been checked on
 the HTPC yet.
 
+2026-11-20, the clean-slate renovation (written, untested, needs a reinstall):
+KDE, KWin, SDDM, Bigscreen and KDE Connect are gone. `modules/desktop/hyprland.nix`
+(`services.htpc.desktop.hyprland`) replaces bigscreen.nix: getty autologin
+on tty1 plus `exec start-hyprland -- -c /etc/htpc/hyprland.lua` from the
+login shell, copied from Balthasar. The config is Hyprland's Lua format
+(0.57): static `files/hyprland/hyprland.lua` plus a generated tail (monitor,
+fullscreenApps window rules, autostart, extraConfig). The static file plus a
+sample tail passed `Hyprland --verify-config` (Balthasar's 0.57.0), which
+does reject unknown keys and rule fields. Bootloader is Limine on UEFI. The
+disk is declared in `hosts/htpc/disko.nix` (GPT, 1G vfat ESP at /boot, ext4
+root), so hardware-configuration.nix has no fileSystems. Limine can't read
+ext4, which is what forced repartitioning. Nothing on the old disk was worth
+keeping. fuzzel on the remote's Home key is a stopgap launcher until
+quickshell. The mpv HDR toggle (`MANAGE_DISPLAY_HDR`) is off until it's
+rewritten without kscreen-doctor. nvidia.nix gained the Hyprland-wiki
+session variables and nvidia-vaapi-driver. The `disko` flake input still
+needs `nix flake lock`. Next up: scripting and prototyping the quickshell UI.
+
 Asher runs all `nix` commands (`nix flake check`, `nixos-rebuild`, etc.)
 himself — edit files, then hand off for verification.
 
 ## Key decisions and the reasoning behind them
 
-**Architecture is a strict pipeline**: Nix system config/drivers → Plasma
-Bigscreen (compositor+launcher) → content-source apps → one shared mpv
-wrapper → Steam/Moonlight. The single most important structural decision:
+**Architecture is a strict pipeline**: Nix system config/drivers → Hyprland
+(compositor) + quickshell (TV UI, planned) → content-source apps → one
+shared mpv wrapper → Steam/Moonlight. The single most important structural decision:
 every content source hands off to `mpv-htpc` (built in
 `modules/media/mpv.nix`) instead of configuring mpv integration separately
 per app. This means shader/HDR/interpolation config lives in exactly one
 place instead of drifting out of sync across 5 different apps.
 
-**Plasma Bigscreen was chosen over eww+compositor+wallpaper-engine.**
-Original plan was a from-scratch compositor with eww as a launcher over a
-wallpaper engine. Switched to Plasma Bigscreen because the HTPC already
-runs KDE (for the existing mpv/SVP pipeline), and Bigscreen is now a
-first-class, stable Plasma module (shipped stable with Plasma 6.7, June
-2026, currently 6.7.4) rather than the dormant/beta project it used to be.
-Tradeoff noted: nixpkgs doesn't yet expose a one-line
-`services.desktopManager.plasma6-bigscreen.enable` option, so
-`modules/desktop/bigscreen.nix` wires the SDDM session manually — worth
-rechecking nixpkgs periodically in case that's landed.
+**Hyprland + quickshell replaced Plasma Bigscreen (2026-11-20).** Bigscreen
+was picked in September because the box already ran KDE. It went to a black
+screen after the 2026-11-19 commits (two shells fighting over
+org.kde.plasmashell under SDDM), the rollback generation was black too, and
+the root cause was never found. Asher wants freedom from KDE quirks
+breaking features, so it's back to roughly the original plan: a barebones
+compositor (Hyprland, matching Balthasar) with a quickshell UI modelled on
+Bigscreen and other TV UIs, plus small scripts. No display manager on
+purpose. Dropped with KDE: KDE Connect (phone remote, to be redesigned in
+the quickshell phase), the KWin fullscreen rules (now Hyprland window
+rules via `fullscreenApps`), and the portal pre-authorization. No HDMI-CEC
+(would need a USB adapter, not wanted). FreeTube is to be swapped for
+VacuumTube (flatpak) later.
 
 **Content strategy is hybrid, weighted toward Stremio.** Debrid/TorBox died
 as a viable option (TorBox rewrote its ToS in July 2026 to start collecting
@@ -192,8 +213,9 @@ through mpv-htpc.
 
 **Asher's mpv config was ported 2026-09-26** from `~/projects/htpcref` (a
 copy of the old HTPC's files). `auto_upscaler.lua` picks a profile by
-resolution tier, HDR vs SDR, and 4:3 (4:3 gets the CRT shader), and toggles
-KDE HDR via `kscreen-doctor`. The old custom mpv build (HopperRender
+resolution tier, HDR vs SDR, and 4:3 (4:3 gets the CRT shader). It used to
+toggle KDE HDR via `kscreen-doctor`, now off (`MANAGE_DISPLAY_HDR = false`)
+until a Hyprland version is written. The old custom mpv build (HopperRender
 interpolation) was already disabled there, so it's dropped in favour of
 nixpkgs mpv and mpv's built-in interpolation. See `files/mpv/README.md`.
 
@@ -230,17 +252,17 @@ the worst place to have a silent mistake.**
 - MakeMKV: `dvd.rip` turned off 2026-11-19 because nixpkgs' makemkv-oss 2.0.0
   fails with a hash mismatch. Turn it back on in hosts/htpc/default.nix once
   nixpkgs fixes it
-- Bootloader: the GRUB menu (BIOS/MBR) seemed to choose the first entry
-  instantly on 2026-11-19, so older builds couldn't be picked. The cause was
-  never found: the default timeout should be 5s, and a wireless receiver
-  sending a key is a suspect. Options: Limine (NixOS module, supports BIOS),
-  or a move to UEFI + systemd-boot. The new motherboard is almost certainly
-  UEFI-capable, but the disk has no EFI partition (a single ext4 root on
-  MBR), so that move needs repartitioning
+- Reinstall with disko + Limine (README "Reinstall"): `nix flake lock` for
+  the disko input first, then the first real boot of the Hyprland session.
+  Check Limine's 5s menu actually waits (the old GRUB menu skipped its
+  timeout; a wireless receiver sending a key was the suspect)
+- Quickshell TV UI (launcher, overlays) to replace the fuzzel stopgap, and
+  a phone-remote replacement for KDE Connect
+- Rewrite the mpv HDR toggle for Hyprland (`MANAGE_DISPLAY_HDR` is off)
 - Pin the AIOStreams container image (currently `:latest`)
 - Stremio on the HTPC: first run of the native shell (login, AIOStreams,
-  handoff to mpv-htpc with shaders, RemoteKeys vs Bigscreen grabbing Back or
-  Home). All of it worked on the desktop 2026-11-19
+  handoff to mpv-htpc with shaders, RemoteKeys getting Back/Home; Home is
+  currently bound to fuzzel in Hyprland). All of it worked on the desktop 2026-11-19
 - Chroma shaders now actually load (KrigBilateral live-action, CfL anime).
   They were silently ignored before, so watch for dropped frames at 4K on the 3070
 - Fred TV flatpak bypasses mpv-htpc. Check whether it can call the host's mpv
@@ -255,10 +277,14 @@ the worst place to have a silent mistake.**
 
 ## Working conventions established so far
 
-- nixos-unstable (needed for Plasma 6.7)
+- nixos-unstable
 - home-manager as a NixOS module (one `nixos-rebuild`, not a separate
   `home-manager switch`)
-- `hardware-configuration.nix` stays manually generated, not disko
+- Disk layout in `hosts/htpc/disko.nix` (reversed the old "no disko" rule
+  2026-11-20); `hardware-configuration.nix` is generated with
+  `--no-filesystems`
+- Desktop config is Nix-generated (/etc/htpc/hyprland.lua), never
+  ~/.config/hypr. Check Lua changes with `Hyprland --verify-config -c <file>`
 - Every module: `services.htpc.<area>.<feature>.enable`, off by default
 - Personal credentials and URLs are never committed in plaintext. They go in
   sops (`secrets/htpc.yaml`, encrypted), and modules take secret *file paths*

@@ -6,7 +6,7 @@
   imports = [
     ./hardware/nvidia.nix
     ./hardware/input.nix
-    ./desktop/bigscreen.nix
+    ./desktop/hyprland.nix
 
     ./media/mpv.nix
     ./media/library.nix

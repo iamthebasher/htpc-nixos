@@ -3,6 +3,7 @@
 {
   imports = [
     ./hardware-configuration.nix
+    ./disko.nix # partitions + fileSystems (GPT, ESP, ext4 root)
     ../../modules
     ../../home/default.nix
 
@@ -22,10 +23,12 @@
       remotes.mx3Pro.enable = true;
     };
 
-    desktop.bigscreen = {
+    # Hyprland, straight from boot: getty auto-logs in `htpc` on tty1, the
+    # login shell starts Hyprland (no display manager, same as Balthasar)
+    desktop.hyprland = {
       enable = true;
-      kdeconnect.autoAcceptPairing = true; # no mouse-only pairing dialog; trusted LAN only
-      kdeconnect.allowRemoteInput = true; # no "allow remote control?" prompt each login
+      autologin.user = "htpc";
+      monitor.output = "HDMI-A-1"; # the TV; check with `hyprctl monitors`
       # both start windowed otherwise. Fred TV is the dev.fredol.open-tv flatpak
       fullscreenApps = [ "moonlight" "open-tv" ];
     };
@@ -101,26 +104,21 @@
   networking.hostName = "htpc";
   time.timeZone = "America/New_York"; # adjust if this ever isn't true
 
-  # The HTPC boots in legacy BIOS mode (no UEFI), so GRUB installed to the
-  # disk's MBR. Copied from the original /etc/nixos/configuration.nix.
-  # systemd-boot is not an option here: it needs UEFI.
-  boot.loader.grub = {
+  # Limine on UEFI (2026-11-20, with the disko reinstall; was GRUB on
+  # BIOS/MBR). The ESP is /boot (disko.nix). The menu shows the last
+  # generations so a bad build can be picked around. The old GRUB menu
+  # skipped its timeout, so it's explicit here.
+  boot.loader.limine = {
     enable = true;
-    device = "/dev/nvme0n1";
-    useOSProber = true;
+    efiSupport = true;
+    maxGenerations = 10;
   };
+  boot.loader.efi.canTouchEfiVariables = true;
+  boot.loader.timeout = 5;
+
+  zramSwap.enable = true; # compressed swap in RAM; no swap partition (disko.nix)
 
   networking.networkmanager.enable = true;
-
-  # Straight into Bigscreen at boot, no password at the TV. Declared here so
-  # the session is the declared defaultSession (plasma-bigscreen-wayland).
-  # Auto-login set up through System Settings instead writes its own
-  # session choice to /etc/sddm.conf.d, which is how the box ended up
-  # auto-logging into plain Plasma with a black screen (2026-11-20).
-  services.displayManager.autoLogin = {
-    enable = true;
-    user = "htpc";
-  };
 
   users.users.htpc = {
     isNormalUser = true;

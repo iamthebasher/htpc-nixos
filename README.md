@@ -1,7 +1,8 @@
 # htpc-nixos
 
-Declarative NixOS config for a media-center PC: Plasma Bigscreen shell,
-a single shared mpv playback wrapper feeding every content source, and
+Declarative NixOS config for a media-center PC: a barebones Hyprland session
+(quickshell TV UI in progress), a single shared mpv playback wrapper feeding
+every content source, and
 Steam/Moonlight for native sessions. Written to be reused — enable only the
 pieces you want via `services.htpc.*` options.
 
@@ -11,21 +12,50 @@ This is a from-scratch rewrite, written host-first as if for a fresh
 install. Nothing here has been built or booted yet. Before using it on real
 hardware:
 
-1. Boot the NixOS installer (or your current install) on the target machine
-   and run:
-   ```
-   sudo nixos-generate-config --show-hardware-config > hosts/htpc/hardware-configuration.nix
-   ```
-   This replaces the placeholder in that file — it's the one file in this
-   repo that's inherently machine-specific and can't be written ahead of
-   time (disk UUIDs, detected kernel modules).
-2. Adjust `hosts/htpc/default.nix`: timezone, hostname if different,
-   `system.stateVersion` to match whatever release you actually install
-   from (never change it after the first rebuild), and turn off any
-   `services.htpc.*` toggles for hardware you don't have (e.g. `ota`).
-3. Check `DISPLAY_OUTPUT` in `files/mpv/scripts/auto_upscaler.lua` against `kscreen-doctor -o`.
+1. Adjust `hosts/htpc/disko.nix` (the disk to wipe) and
+   `hosts/htpc/default.nix`: timezone, hostname if different, and turn off
+   any `services.htpc.*` toggles for hardware you don't have (e.g. `ota`).
+2. Install with the [Reinstall](#reinstall-disko--limine) steps below.
+3. Check `monitor.output` (host config) and `DISPLAY_OUTPUT` in
+   `files/mpv/scripts/auto_upscaler.lua` against `hyprctl monitors`.
 4. Set up secrets — see [Secrets setup](#secrets-setup-sops-nix).
-5. `sudo nixos-rebuild switch --flake .#htpc`
+
+## Reinstall (disko + Limine)
+
+**This wipes the disk named in `hosts/htpc/disko.nix` (`/dev/nvme0n1`).**
+The firmware must boot the installer in UEFI mode (turn CSM/legacy boot
+off), since Limine is installed as a UEFI bootloader.
+
+1. Boot the NixOS installer USB (UEFI). Get online, then:
+   ```
+   lsblk                                   # confirm the disk matches disko.nix
+   git clone https://github.com/iamthebasher/htpc-nixos && cd htpc-nixos
+   sudo nix --extra-experimental-features 'nix-command flakes' \
+     run github:nix-community/disko/latest -- --mode destroy,format,mount --flake .#htpc
+   ```
+2. Regenerate the hardware file without filesystems (disko owns those):
+   ```
+   sudo nixos-generate-config --no-filesystems --root /mnt --show-hardware-config \
+     > hosts/htpc/hardware-configuration.nix
+   ```
+3. Install, then set the user's password (needed for sudo; the TV
+   auto-logs in without it):
+   ```
+   sudo nixos-install --flake .#htpc --no-root-passwd
+   sudo nixos-enter --root /mnt -c 'passwd htpc'
+   ```
+4. Keep the repo, regenerated hardware file included (the installer's copy
+   is in RAM and gone after reboot):
+   ```
+   sudo cp -r . /mnt/home/htpc/htpc-nixos
+   sudo nixos-enter --root /mnt -c 'chown -R htpc:users /home/htpc/htpc-nixos'
+   ```
+5. Reboot. Limine shows its menu for 5 s, then getty auto-logs `htpc` in on
+   tty1 and Hyprland starts. Commit and push the new
+   `hardware-configuration.nix` from `~/htpc-nixos`.
+
+Afterwards: `sudo nixos-rebuild switch --flake .#htpc` as usual. Ctrl+Alt+F2
+gives a plain text console if the session is ever broken.
 
 ## Layout
 
@@ -36,12 +66,13 @@ secrets/htpc.yaml                  encrypted secrets (create it — see Secrets 
 hosts/htpc/
   default.nix                      host glue — imports modules, sets services.htpc.* toggles
   secrets.nix                      sops secrets + the modules that need them (VPN, IPTV)
-  hardware-configuration.nix       generated on the HTPC (regenerate if the disks change)
+  disko.nix                        disk layout (GPT: 1G FAT ESP at /boot + ext4 root); formats at install, provides fileSystems
+  hardware-configuration.nix       generated on the HTPC with --no-filesystems (regenerate if hardware changes)
 modules/
   default.nix                      the full module list (used by the host and nixosModules.default)
   hardware/nvidia.nix              services.htpc.hardware.nvidia.enable
   hardware/input.nix               services.htpc.hardware.input.{logging,tools,remotes.mx3Pro}.enable — udev device log, input debug tools, per-remote fixes
-  desktop/bigscreen.nix            services.htpc.desktop.bigscreen.{enable,kdeconnect.*,fullscreenApps}
+  desktop/hyprland.nix             services.htpc.desktop.hyprland.{enable,autologin.user,monitor,fullscreenApps,autostart,extraConfig}
   media/mpv.nix                    services.htpc.media.mpv.enable — the shared wrapper
   media/library.nix                services.htpc.media.library.{dir,group} — shared /srv/media + group
   media/stremio.nix                services.htpc.media.stremio.enable
@@ -57,6 +88,7 @@ modules/
   network/protonvpn.nix            services.htpc.network.protonvpn.enable — declarative WireGuard + nftables killswitch
 home/default.nix                   home-manager module (imported as a NixOS module, one rebuild does both)
 pkgs/stremio-linux-shell-enhanced/ Stremio Enhanced on the native GTK/WebKit shell, built from source
+files/hyprland/hyprland.lua        static half of the Hyprland config (the module appends the generated half -> /etc/htpc/hyprland.lua)
 files/mpv/                         mpv config dir referenced by modules/media/mpv.nix
 files/stremio-enhanced/            Stremio Enhanced plugins: MpvHandoffShell (-> mpv-htpc), RemoteKeys (remote buttons)
 ```
@@ -202,11 +234,15 @@ differently, adjust those — hasn't been made configurable yet.
 
 ## Design notes
 
-- **nixos-unstable**, pinned via flake input — needed for Plasma 6.7/Bigscreen.
+- **nixos-unstable**, pinned via flake input.
 - **home-manager as a NixOS module** — one `nixos-rebuild switch`, no separate
   `home-manager switch` to remember.
-- **hardware-configuration.nix stays manual** (not disko) — conventional
-  install flow, generated once per machine.
+- **Disko for partitioning** (since 2026-11-20): the disk layout is in the
+  repo, so a reinstall is one command. hardware-configuration.nix is still
+  generated per machine, but only for kernel modules and CPU, not filesystems.
+- **Hyprland without a display manager**: getty autologin on tty1 plus
+  `exec start-hyprland` in the login shell. One less moving part than SDDM
+  sessions, which is where the Bigscreen black screen came from.
 - Every content-source module should hand off to
   `${config.services.htpc.media.mpv.package}/bin/mpv-htpc` rather than raw
   `mpv`, so shader/HDR/interpolation config only lives in one place

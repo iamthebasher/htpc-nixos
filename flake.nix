@@ -1,5 +1,5 @@
 {
-  description = "Asher's HTPC — declarative NixOS media center (Plasma Bigscreen, mpv pipeline, Stremio/IPTV/YouTube, Steam + Moonlight)";
+  description = "Asher's HTPC — declarative NixOS media center (Hyprland + quickshell, mpv pipeline, Stremio/IPTV/YouTube, Steam + Moonlight)";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -19,9 +19,16 @@
     # Declarative flatpaks (plain NixOS can only enable flatpak, not choose
     # which apps are installed). Here for Fred TV, which isn't in nixpkgs.
     nix-flatpak.url = "github:gmodena/nix-flatpak/?ref=latest";
+
+    # Declarative partitioning: hosts/htpc/disko.nix formats the disk at
+    # install time and provides fileSystems on every build.
+    disko = {
+      url = "github:nix-community/disko";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, home-manager, sops-nix, nix-flatpak, ... }@inputs:
+  outputs = { self, nixpkgs, home-manager, sops-nix, nix-flatpak, disko, ... }@inputs:
     let
       system = "x86_64-linux";
       # No `pkgs` binding here on purpose: lib.nixosSystem builds its own pkgs
@@ -66,6 +73,7 @@
             home-manager.nixosModules.home-manager
             sops-nix.nixosModules.sops
             nix-flatpak.nixosModules.nix-flatpak
+            disko.nixosModules.disko
             {
               home-manager.useGlobalPkgs = true;
               home-manager.useUserPackages = true;

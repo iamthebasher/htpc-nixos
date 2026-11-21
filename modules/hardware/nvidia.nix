@@ -34,5 +34,16 @@ in
 
     # HDR / VRR on a couch setup benefit from the newer kernel + explicit sync path
     boot.kernelParams = [ "nvidia-drm.modeset=1" ];
+
+    # wlroots-style compositors (Hyprland) don't set these up the way KWin
+    # did. From the Hyprland wiki's NVIDIA page: VA-API through
+    # nvidia-vaapi-driver (browsers, apps without NVDEC), and the NVIDIA GLX
+    # vendor for XWayland apps.
+    hardware.graphics.extraPackages = [ pkgs.nvidia-vaapi-driver ];
+    environment.sessionVariables = {
+      LIBVA_DRIVER_NAME = "nvidia";
+      __GLX_VENDOR_LIBRARY_NAME = "nvidia";
+      NVD_BACKEND = "direct";
+    };
   };
 }
