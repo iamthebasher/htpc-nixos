@@ -8,6 +8,7 @@ import Quickshell.Widgets
 //   Weather location  type a city, pick a match (Open-Meteo geocoding)
 //   Temperature       °F / °C
 //   App cards         per ribbon app: an image from Prefs.cardsDir, or the icon
+//   Update apps       update the flatpaks now (they also update on a timer)
 FocusScope {
     id: panelRoot
     property bool open: false
@@ -25,7 +26,7 @@ FocusScope {
     opacity: open ? 1 : 0
     Behavior on opacity { NumberAnimation { duration: Theme.anim } }
 
-    onOpenChanged: if (open) go("main")
+    onOpenChanged: if (open) { go("main"); Updates.refresh(); }
 
     function go(p) {
         page = p;
@@ -52,13 +53,15 @@ FocusScope {
         { key: "unit",    title: "Temperature",      value: Prefs.unit === "celsius" ? "°C" : "°F" },
         { key: "wallpaper", title: "Wallpaper",        value: fileName(Prefs.wallpaper) || "Built-in glow" },
         { key: "rotate",    title: "Change wallpaper", value: rotateLabel(Prefs.wallpaperRotate) },
-        { key: "cards",     title: "App cards",        value: Object.keys(Prefs.cards).length + " custom" }
+        { key: "cards",     title: "App cards",        value: Object.keys(Prefs.cards).length + " custom" },
+        { key: "updates",   title: "Update apps",      value: Updates.label }
     ].concat(Prefs.weather ? [{ key: "clear", title: "Remove weather location", value: "" }] : [])
 
     function activateMain(key) {
         if (key === "weather") go("city");
         else if (key === "unit") Prefs.unit = (Prefs.unit === "celsius") ? "fahrenheit" : "celsius";
         else if (key === "cards") go("cards");
+        else if (key === "updates") Updates.start();
         else if (key === "wallpaper") { pickerFor = "wallpaper"; go("image"); }
         else if (key === "rotate") {
             const i = rotateSteps.indexOf(Prefs.wallpaperRotate);
@@ -142,7 +145,7 @@ FocusScope {
                 id: mainList
                 anchors.fill: parent
                 visible: panelRoot.page === "main"
-                model: panelRoot.mainRows
+                rows: panelRoot.mainRows
                 onPicked: index => panelRoot.activateMain(panelRoot.mainRows[index].key)
                 onBackRequested: panelRoot.back()
             }
@@ -152,7 +155,7 @@ FocusScope {
                 anchors.fill: parent
                 visible: panelRoot.page === "cards"
                 onBackRequested: panelRoot.back()
-                model: Apps.lineup.map(a => ({ title: a.name, value: panelRoot.fileName(Prefs.cards[a.name]) || "Icon" }))
+                rows: Apps.lineup.map(a => ({ title: a.name, value: panelRoot.fileName(Prefs.cards[a.name]) || "Icon" }))
                 onPicked: index => { panelRoot.cardApp = Apps.lineup[index].name; panelRoot.pickerFor = "card"; panelRoot.go("image"); }
             }
 

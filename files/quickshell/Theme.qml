@@ -26,6 +26,7 @@ Singleton {
     readonly property color dim:     "#aaaaaa"
     readonly property color accent:  "#00a6b2"
     readonly property color running: "#00d900"
+    readonly property color danger:  "#e50000"   // theme.nix ui.danger: Close
 
     // glass fills (QML colours are #AARRGGBB)
     readonly property color glass:       "#66000000"   // panels and tiles, over blur

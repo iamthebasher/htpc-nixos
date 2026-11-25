@@ -10,13 +10,16 @@ Singleton {
     //           icon and to launch it
     //  command: fallback launch command if there's no desktop entry
     //  match:   regex on the window class, to find it when it's running
+    //  quit:    optional command run by Close instead of closing the window
+    //           (for apps that only hide to the tray when their window closes)
     readonly property var apps: [
         { name: "Stremio",   desktop: "io.github.revenge977.StremioLinuxShellEnhanced", match: "StremioLinuxShellEnhanced", command: [] },
         { name: "Jellyfin",  desktop: "com.github.iwalton3.jellyfin-media-player",      match: "jellyfin",                   command: [] },
         { name: "YouTube",   desktop: "rocks.shy.VacuumTube",                           match: "vacuumtube",                 command: [] },
         { name: "Live TV",   desktop: "dev.fredol.open-tv",                             match: "open-tv",                    command: [] },
-        { name: "Steam",     desktop: "steam",                                          match: "^steam$",                    command: ["steam", "-gamepadui"] },
-        { name: "Moonlight", desktop: "com.moonlight_stream.Moonlight",                 match: "moonlight",                  command: [] }
+        { name: "Steam",     desktop: "steam",                                          match: "^steam$",                    command: ["steam", "-gamepadui"], quit: ["steam", "-shutdown"] },
+        { name: "Moonlight", desktop: "com.moonlight_stream.Moonlight",                 match: "moonlight",                  command: [] },
+        { name: "Roblox",    desktop: "org.vinegarhq.Sober",                            match: "sober",                      command: [] }
     ]
 
     // Weather location and units are set from the shell's Settings screen

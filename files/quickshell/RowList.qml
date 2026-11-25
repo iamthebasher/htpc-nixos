@@ -1,11 +1,15 @@
 import QtQuick
 
 // A settings-style list: title on the left, current value on the right.
-// model: [{ title, value }]. OK emits picked(index), Back emits backRequested().
+// rows: [{ title, value }]. OK emits picked(index), Back emits backRequested().
+// The ListView's model is just the row count, so changing a value (a setting
+// toggled, a status updating) doesn't reset the selection to the top.
 ListView {
     id: rl
     signal picked(int index)
     signal backRequested()
+    property var rows: []
+    model: rows.length
 
     clip: true
     spacing: Theme.px(8)
@@ -14,7 +18,7 @@ ListView {
 
     delegate: Item {
         id: row
-        required property var modelData
+        readonly property var modelData: rl.rows[row.index] || ({ title: "", value: "" })
         required property int index
         width: ListView.view.width
         height: Theme.px(80)

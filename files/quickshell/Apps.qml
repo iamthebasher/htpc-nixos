@@ -37,7 +37,7 @@ Singleton {
         const entry = DesktopEntries.byId(a.desktop);
         const window = findWindow(a.match);
         return { kind: "app", name: a.name, icon: entry ? entry.icon : "", entry: entry,
-                 command: a.command, running: window !== null, window: window, installed: entry !== null || a.command.length > 0 };
+                 command: a.command, quit: a.quit || [], running: window !== null, window: window, installed: entry !== null || a.command.length > 0 };
     }
 
     function windowClass(t) {
@@ -72,5 +72,47 @@ Singleton {
     // Home screen = an empty workspace, so nothing covers the background layer.
     function goHome() {
         dispatch(`hl.dsp.focus({ workspace = "empty" })`);
+    }
+
+    // Closing. Close = a normal close request, like the app's own X button,
+    // so it can save state. Apps with a `quit` command in Config (Steam,
+    // which would only hide to the tray) run that instead. If the window is
+    // still there `stuckAfter` ms later the app is hung, and closing it
+    // again force-quits it (SIGKILL to the window's process).
+    property var closing: null        // the toplevel being closed
+    property bool closeTimedOut: false
+    readonly property int stuckAfter: 6000
+    readonly property bool closeStuck: closeTimedOut && closing !== null
+        && Hyprland.toplevels.values.indexOf(closing) >= 0
+    function isStuck(it) { return closeStuck && !!it && it.window === closing; }
+
+    function close(it) {
+        if (!it || !it.window) return;
+        if (isStuck(it)) { forceQuit(it); return; }
+        Hyprland.refreshToplevels();   // fills lastIpcObject (the pid) for a force quit
+        if (it.quit && it.quit.length > 0) Quickshell.execDetached(it.quit);
+        else dispatch(`hl.dsp.window.close({ window = "address:0x${it.window.address}" })`);
+        closing = it.window;
+        closeTimedOut = false;
+        stuckTimer.restart();
+    }
+
+    function forceQuit(it) {
+        const ipc = it.window.lastIpcObject;
+        const pid = ipc ? ipc.pid : 0;
+        if (pid > 0) {
+            console.log(`htpc: force-quitting ${it.name} (pid ${pid})`);
+            Quickshell.execDetached(["kill", "-KILL", String(pid)]);
+        } else {
+            console.log(`htpc: no pid for ${it.name}, can't force-quit`);
+        }
+        closing = null;
+        closeTimedOut = false;
+    }
+
+    Timer {
+        id: stuckTimer
+        interval: root.stuckAfter
+        onTriggered: root.closeTimedOut = true
     }
 }

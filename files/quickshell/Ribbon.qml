@@ -1,8 +1,8 @@
 import QtQuick
-import QtQuick.Effects
 
 // A row of AppTiles driven by the remote: Left/Right to move, OK (Enter) to
-// open. The selected app's name shows underneath.
+// open, Del on a running app to close it. The selected app's name shows
+// underneath.
 // Fits on screen: centred. Too many apps: full width, scrolls to keep the
 // selection in view, and the edges fade out to show there's more.
 FocusScope {
@@ -10,7 +10,22 @@ FocusScope {
     property var model: []
     property alias currentIndex: list.currentIndex
     signal activated(var app)
+    signal closeRequested(var app)                 // Del on a running app
     property Item glassBackdrop: Theme.backdrop   // passed to the tiles
+
+    readonly property var currentApp: model[list.currentIndex] || null
+    // where the selected tile is, in the ribbon's coordinates (for things
+    // drawn above it, like the overlay's Close button)
+    readonly property real currentCenterX: list.currentItem
+        ? holder.x + list.currentItem.x - list.contentX + list.currentItem.width / 2 : width / 2
+    readonly property real currentTop: (holder.height - tileH * 1.12) / 2   // the grown tile's top edge
+
+    Keys.onPressed: event => {
+        if ((event.key === Qt.Key_Backspace || event.key === Qt.Key_Delete) && currentApp && currentApp.running) {
+            closeRequested(currentApp);
+            event.accepted = true;
+        }
+    }
 
     readonly property real tileW: Theme.px(208)
     readonly property real tileH: Theme.px(124)
@@ -77,7 +92,7 @@ FocusScope {
         anchors { top: holder.bottom; topMargin: -Theme.px(4) }
         x: list.currentItem ? holder.x + list.currentItem.x - list.contentX + list.currentItem.width / 2 - width / 2 : 0
         visible: ribbon.activeFocus && list.currentItem !== null
-        text: ribbon.model[list.currentIndex] ? ribbon.model[list.currentIndex].name : ""
+        text: !ribbon.currentApp ? "" : ribbon.currentApp.name + (Apps.isStuck(ribbon.currentApp) ? "  ·  not responding, Del to force quit" : "")
         color: Theme.text
         font.family: Theme.font
         font.pixelSize: Theme.px(26)

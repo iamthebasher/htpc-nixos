@@ -124,6 +124,23 @@ key navigation is tied to `interactive` unless keyNavigationEnabled is set;
 the IconTheme pragma only applies on a full restart, not a hot reload. The
 Strata file manager is installed too (the strata input is a full flake).
 
+2026-11-25 (untested on the HTPC; the dev window loads without QML errors):
+closing apps from the remote. On a running app in the ribbon (home screen
+or the overlay), Del (the remote's del key, KEY_BACKSPACE) closes it. In
+the overlay, Up also focuses a Close button above the tile. Close is a normal
+window close. Apps with a `quit` command in Config.qml run that instead
+(Steam: `steam -shutdown`, since closing its window only hides it). If the
+window is still there 6 s later, the button reads "Force quit" and closing
+again sends SIGKILL to the window's pid (Apps.qml, lastIpcObject.pid).
+Sober (org.vinegarhq.Sober, Roblox) was added as a flatpak, with a "Roblox"
+ribbon tile and a fullscreen rule. `modules/system/flatpak-update.nix`
+(`services.htpc.system.flatpakUpdate`) runs `htpc-flatpak-update.service`
+every 6 h (Persistent timer). A polkit rule lets a local active session start
+that unit only, which is how Settings > Update apps (Updates.qml) runs it.
+nix-flatpak's own update options stay off. RowList's model is now the row
+count, so a changed value no longer jumps the selection to the top. Hydra
+Launcher (nixpkgs `hydralauncher`) is being tried on Balthasar first.
+
 Asher runs all `nix` commands (`nix flake check`, `nixos-rebuild`, etc.)
 himself — edit files, then hand off for verification.
 

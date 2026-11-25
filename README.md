@@ -85,6 +85,7 @@ modules/
   media/ota.nix                    services.htpc.media.ota.enable — HDHomeRun lineup -> mpv-htpc
   media/gaming.nix                 services.htpc.gaming.{steam,moonlight,heroic,lutris}.enable
   system/fake-hwclock.nix          services.htpc.system.fakeHwclock.enable — clock save/restore for dead-RTC hardware
+  system/flatpak-update.nix        services.htpc.system.flatpakUpdate.enable — flatpak updates on a timer, startable from the TV UI
   network/protonvpn.nix            services.htpc.network.protonvpn.enable — declarative WireGuard + nftables killswitch
 home/default.nix                   home-manager module (imported as a NixOS module, one rebuild does both)
 pkgs/stremio-linux-shell-enhanced/ Stremio Enhanced on the native GTK/WebKit shell, built from source
@@ -189,6 +190,7 @@ declare. Each module has a comment with details; the short list:
   VPN on, set `services.htpc.media.ota.tunerAddress` — discovery is broadcast
   and the killswitch blocks it.
 - **MakeMKV**: enter the beta key (Help → Register).
+- **Sober** (Roblox): sign in to Roblox on first launch.
 
 ## Using this repo without forking it
 

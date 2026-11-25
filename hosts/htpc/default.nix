@@ -40,7 +40,8 @@
       # start windowed otherwise. Fred TV is the dev.fredol.open-tv flatpak;
       # Stremio Enhanced's class is io.github.revenge977.StremioLinuxShellEnhanced
       # (fullscreen also hides its GTK title bar)
-      fullscreenApps = [ "moonlight" "open-tv" "StremioLinuxShellEnhanced" ];
+      # Sober (Roblox) is org.vinegarhq.Sober
+      fullscreenApps = [ "moonlight" "open-tv" "StremioLinuxShellEnhanced" "sober" ];
       # the TV UI (files/quickshell): home screen, ribbon, launcher, settings
       shell.enable = true;
     };
@@ -87,6 +88,8 @@
     };
 
     system.fakeHwclock.enable = true;
+    # flatpaks update every 6 hours, or now from Settings > Update apps
+    system.flatpakUpdate.enable = true;
 
     # network.protonvpn.enable is set in ./secrets.nix — it needs the private key secret
   };
@@ -102,7 +105,14 @@
 
   services.flatpak = {
     enable = true;
-    packages = [ "dev.fredol.open-tv" ];
+    packages = [
+      "dev.fredol.open-tv"
+      # Sober: Roblox's Android client in a Linux runtime (Roblox has no
+      # Linux client). Flathub only. Sign in on first launch; it takes a
+      # controller. Ribbon tile "Roblox" in files/quickshell/Config.qml
+      "org.vinegarhq.Sober"
+    ];
+    # updates: services.htpc.system.flatpakUpdate (above), not nix-flatpak's
   };
 
   # nvidia drivers, steam, etc. Must be set as a module option — see the

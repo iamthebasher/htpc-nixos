@@ -21,5 +21,6 @@ FocusScope {
         model: Apps.lineup
         KeyNavigation.up: pill
         onActivated: app => Apps.activate(app)
+        onCloseRequested: app => Apps.close(app)
     }
 }
