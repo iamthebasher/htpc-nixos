@@ -166,6 +166,8 @@ in
             ${optionalString (cfg.lanSubnets != [ ]) "ip daddr { ${lanSet} } accept  # LAN"}
             ${optionalString split.enable "meta skgid ${gid} accept  # novpn apps"}
 
+            ${optionalString config.services.tailscale.enable ''oifname "tailscale0" accept  # tailnet peers''}
+
             oifname "protonvpn" accept
           }
 
@@ -177,6 +179,8 @@ in
 
             udp sport { 67, 68 } accept  # DHCP
             ${optionalString (cfg.lanSubnets != [ ]) "ip saddr { ${lanSet} } accept  # LAN"}
+
+            ${optionalString config.services.tailscale.enable ''iifname "tailscale0" accept  # tailnet peers (Tailscale ACLs decide who)''}
 
             iifname "protonvpn" accept
           }

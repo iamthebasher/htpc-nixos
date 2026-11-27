@@ -23,5 +23,6 @@
     ./system/fake-hwclock.nix
     ./system/flatpak-update.nix
     ./network/protonvpn.nix
+    ./network/tailscale.nix
   ];
 }

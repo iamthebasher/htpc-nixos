@@ -82,7 +82,7 @@
 
     gaming = {
       steam.enable = true;
-      moonlight.enable = true;
+      moonlight.enable = true; # streams from Sunshine on Balthasar
       heroic.enable = true;
       lutris.enable = true;
     };
@@ -91,6 +91,7 @@
     # flatpaks update every 6 hours, or now from Settings > Update apps
     system.flatpakUpdate.enable = true;
 
+    network.tailscale.enable = true; # `sudo tailscale up` once to log in
     # network.protonvpn.enable is set in ./secrets.nix — it needs the private key secret
   };
 
