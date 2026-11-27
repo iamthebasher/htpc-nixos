@@ -66,15 +66,16 @@ let
         end
         return false
     end
+    -- Through `hyprctl eval`, not hl.monitor directly: called from a handler
+    -- registered at config load, hl.monitor didn't change the TV on 0.57.2
+    -- (the same call from a live `hyprctl eval` did). Logs to
+    -- $XDG_RUNTIME_DIR/htpc-hdr.log.
     local function htpcTv(hdr)
-        hl.monitor({
-            output   = ${lua cfg.monitor.output},
-            mode     = ${lua cfg.monitor.mode},
-            position = "auto",
-            scale    = ${toString cfg.monitor.scale},
-            bitdepth = 10,
-            cm       = hdr and "hdr" or "srgb",
-        })
+        local cm = hdr and "hdr" or "srgb"
+        local rule = string.format(
+            'hl.monitor({ output = %q, mode = %q, position = "auto", scale = %s, bitdepth = 10, cm = %q })',
+            ${lua cfg.monitor.output}, ${lua cfg.monitor.mode}, ${lua (toString cfg.monitor.scale)}, cm)
+        hl.exec_cmd("hyprctl eval '" .. rule .. "'; echo \"$(date +%T) tv " .. cm .. "\" >> \"$XDG_RUNTIME_DIR/htpc-hdr.log\"")
     end
     hl.on("window.open", function (w)
         if htpcIsHdrApp(w) then
