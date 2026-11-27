@@ -36,7 +36,26 @@ let
       hl.bind("SUPER + SPACE", hl.dsp.exec_cmd("fuzzel"))
     '';
 
-  autostart = optional cfg.shell.enable "env HTPC_SHELL=tv ${qs} -p ${shellDir}" ++ cfg.autostart;
+  # `htpc-tv-hdr on|off`: the TV's normal mode, in HDR or SDR. The quickshell
+  # TV UI runs it when an hdrApps window opens / the last one closes (it gets
+  # the list as HTPC_HDR_APPS). Done there rather than in a Hyprland
+  # window.open handler: handlers registered by the config never fired for
+  # window events on 0.57.2 (hyprland.start did), while quickshell already
+  # tracks the windows and isn't reset by config reloads.
+  htpcTvHdr = pkgs.writeShellScriptBin "htpc-tv-hdr" ''
+    case "$1" in
+      on)  cm=hdr ;;
+      off) cm=srgb ;;
+      *)   echo "usage: htpc-tv-hdr on|off" >&2; exit 2 ;;
+    esac
+    hyprctl eval "hl.monitor({ output = ${lua cfg.monitor.output}, mode = ${lua cfg.monitor.mode}, position = \"auto\", scale = ${toString cfg.monitor.scale}, bitdepth = 10, cm = \"$cm\" })"
+    echo "$(date +%T) tv $cm" >> "''${XDG_RUNTIME_DIR:-/tmp}/htpc-hdr.log"
+  '';
+
+  shellEnv = "HTPC_SHELL=tv"
+    + optionalString (cfg.hdrApps != [ ]) " HTPC_HDR_APPS=${escapeShellArg (concatStringsSep "," cfg.hdrApps)}";
+
+  autostart = optional cfg.shell.enable "env ${shellEnv} ${qs} -p ${shellDir}" ++ cfg.autostart;
 
   generated = ''
 
@@ -54,42 +73,6 @@ let
   + concatStrings (imap1 (i: re: ''
     hl.window_rule({ name = "htpc-fullscreen-${toString i}", match = { class = ${lua "(?i)${re}"} }, fullscreen = true })
   '') cfg.fullscreenApps)
-  + optionalString (cfg.hdrApps != [ ]) ''
-
-    -- HDR while an hdrApps window is open (counted, so two don't fight)
-    local htpcHdrApps = { ${concatMapStringsSep ", " (a: lua (toLower a)) cfg.hdrApps} }
-    local htpcHdrOpen = 0
-    local function htpcIsHdrApp(w)
-        local class = string.lower(tostring(w.class or ""))
-        for _, a in ipairs(htpcHdrApps) do
-            if string.find(class, a, 1, true) then return true end
-        end
-        return false
-    end
-    -- Through `hyprctl eval`, not hl.monitor directly: called from a handler
-    -- registered at config load, hl.monitor didn't change the TV on 0.57.2
-    -- (the same call from a live `hyprctl eval` did). Logs to
-    -- $XDG_RUNTIME_DIR/htpc-hdr.log.
-    local function htpcTv(hdr)
-        local cm = hdr and "hdr" or "srgb"
-        local rule = string.format(
-            'hl.monitor({ output = %q, mode = %q, position = "auto", scale = %s, bitdepth = 10, cm = %q })',
-            ${lua cfg.monitor.output}, ${lua cfg.monitor.mode}, ${lua (toString cfg.monitor.scale)}, cm)
-        hl.exec_cmd("hyprctl eval '" .. rule .. "'; echo \"$(date +%T) tv " .. cm .. "\" >> \"$XDG_RUNTIME_DIR/htpc-hdr.log\"")
-    end
-    hl.on("window.open", function (w)
-        if htpcIsHdrApp(w) then
-            htpcHdrOpen = htpcHdrOpen + 1
-            if htpcHdrOpen == 1 then htpcTv(true) end
-        end
-    end)
-    hl.on("window.close", function (w)
-        if htpcIsHdrApp(w) and htpcHdrOpen > 0 then
-            htpcHdrOpen = htpcHdrOpen - 1
-            if htpcHdrOpen == 0 then htpcTv(false) end
-        end
-    end)
-  ''
   + launcherBinds
   + optionalString (autostart != [ ]) ''
 
@@ -196,8 +179,10 @@ in
         matching window is open the TV runs in HDR (`cm = "hdr"`, 10-bit),
         and goes back to SDR when the last one closes. For apps that send
         HDR but don't signal it to Hyprland, so its own auto-HDR
-        (render:cm_auto_hdr) never kicks in. Each switch makes the TV drop
-        and re-add itself, which the quickshell windows follow.
+        (render:cm_auto_hdr) never kicks in. Needs shell.enable: the
+        quickshell TV UI watches the windows and runs `htpc-tv-hdr on|off`
+        (switches logged to $XDG_RUNTIME_DIR/htpc-hdr.log). Each switch
+        makes the TV drop and re-add itself, which the shell's windows follow.
       '';
     };
 
@@ -238,7 +223,8 @@ in
         foot        # SUPER+RETURN: a terminal for maintenance
         playerctl   # media keys -> MPRIS
         cfg.cursor.package
-      ] ++ (if cfg.shell.enable then [ cfg.shell.package ] else [ fuzzel ]);
+      ] ++ (if cfg.shell.enable then [ cfg.shell.package ] else [ fuzzel ])
+        ++ optional (cfg.hdrApps != [ ]) htpcTvHdr;
 
       # Session-wide, so Hyprland, Wayland apps and XWayland apps agree.
       # Hyprland is started from the login shell, which has these.
