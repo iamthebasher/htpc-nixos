@@ -24,10 +24,19 @@ let
   # fuzzel. Search is deliberately NOT bound with the shell: it should reach
   # the focused app (Stremio has its own search), and the shell's home screen
   # gets it directly when it has focus (nothing open).
+  # homeHook set: Home runs it first (through app keyboard grabs, e.g.
+  # Moonlight's) and only goes home if it exits non-zero. One bind on the
+  # key: a second bind on the same key in this config was silently dropped
+  # on 0.57.2, so a separate long-press bind can't work.
+  homeBind =
+    if cfg.homeHook == null
+    then ''hl.bind("XF86HomePage",  hl.dsp.exec_cmd(${lua (shellIpc "home")}))''
+    else ''hl.bind("XF86HomePage",  hl.dsp.exec_cmd(${lua "${cfg.homeHook} || ${shellIpc "home"}"}), { dont_inhibit = true })'';
+
   launcherBinds =
     if cfg.shell.enable then ''
 
-      hl.bind("XF86HomePage",  hl.dsp.exec_cmd(${lua (shellIpc "home")}))
+      ${homeBind}
       hl.bind("SUPER + SPACE", hl.dsp.exec_cmd(${lua (shellIpc "search")}))
     '' else ''
 
@@ -48,7 +57,10 @@ let
       off) cm=srgb ;;
       *)   echo "usage: htpc-tv-hdr on|off" >&2; exit 2 ;;
     esac
-    hyprctl eval "hl.monitor({ output = ${lua cfg.monitor.output}, mode = ${lua cfg.monitor.mode}, position = \"auto\", scale = ${toString cfg.monitor.scale}, bitdepth = 10, cm = \"$cm\" })"
+    # rule built single-quoted (its Lua strings need their double quotes), CM
+    # swapped for hdr/srgb
+    rule=${escapeShellArg "hl.monitor({ output = ${lua cfg.monitor.output}, mode = ${lua cfg.monitor.mode}, position = \"auto\", scale = ${toString cfg.monitor.scale}, bitdepth = 10, cm = \"CM\" })"}
+    hyprctl eval "''${rule/CM/$cm}"
     echo "$(date +%T) tv $cm" >> "''${XDG_RUNTIME_DIR:-/tmp}/htpc-hdr.log"
   '';
 
@@ -168,6 +180,18 @@ in
         defaultText = literalExpression "pkgs.quickshell";
         description = "Quickshell package.";
       };
+    };
+
+    homeHook = mkOption {
+      type = types.nullOr types.str;
+      default = null;
+      example = "moonlight-exit";
+      description = ''
+        Command the remote's Home runs before going home. Home is bound with
+        dont_inhibit, so this works while an app grabs the keyboard; if the
+        command exits non-zero (nothing to do), Home goes home as normal.
+        gaming.moonlight.host sets it to `moonlight-exit`.
+      '';
     };
 
     hdrApps = mkOption {
