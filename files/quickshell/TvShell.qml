@@ -14,6 +14,10 @@ Scope {
     id: tv
 
     PanelWindow {
+        // Follow the TV across hotplugs: HDR/mode switches (Moonlight) make
+        // Hyprland drop and re-add it, and an unbound window dies with the
+        // old screen (home screen gone after Moonlight, 2026-11-27).
+        screen: Quickshell.screens.length > 0 ? Quickshell.screens[0] : null
         id: homeWin
         anchors { top: true; bottom: true; left: true; right: true }
         exclusionMode: ExclusionMode.Ignore
@@ -46,6 +50,10 @@ Scope {
     }
 
     PanelWindow {
+        // Follow the TV across hotplugs: HDR/mode switches (Moonlight) make
+        // Hyprland drop and re-add it, and an unbound window dies with the
+        // old screen (home screen gone after Moonlight, 2026-11-27).
+        screen: Quickshell.screens.length > 0 ? Quickshell.screens[0] : null
         id: overlayWin
         // mapped while anything is open or still fading out
         visible: ShellState.mode !== "home" || switcher.opacity > 0 || launcher.opacity > 0 || settings.opacity > 0

@@ -54,6 +54,41 @@ let
   + concatStrings (imap1 (i: re: ''
     hl.window_rule({ name = "htpc-fullscreen-${toString i}", match = { class = ${lua "(?i)${re}"} }, fullscreen = true })
   '') cfg.fullscreenApps)
+  + optionalString (cfg.hdrApps != [ ]) ''
+
+    -- HDR while an hdrApps window is open (counted, so two don't fight)
+    local htpcHdrApps = { ${concatMapStringsSep ", " (a: lua (toLower a)) cfg.hdrApps} }
+    local htpcHdrOpen = 0
+    local function htpcIsHdrApp(w)
+        local class = string.lower(tostring(w.class or ""))
+        for _, a in ipairs(htpcHdrApps) do
+            if string.find(class, a, 1, true) then return true end
+        end
+        return false
+    end
+    local function htpcTv(hdr)
+        hl.monitor({
+            output   = ${lua cfg.monitor.output},
+            mode     = ${lua cfg.monitor.mode},
+            position = "auto",
+            scale    = ${toString cfg.monitor.scale},
+            bitdepth = 10,
+            cm       = hdr and "hdr" or "srgb",
+        })
+    end
+    hl.on("window.open", function (w)
+        if htpcIsHdrApp(w) then
+            htpcHdrOpen = htpcHdrOpen + 1
+            if htpcHdrOpen == 1 then htpcTv(true) end
+        end
+    end)
+    hl.on("window.close", function (w)
+        if htpcIsHdrApp(w) and htpcHdrOpen > 0 then
+            htpcHdrOpen = htpcHdrOpen - 1
+            if htpcHdrOpen == 0 then htpcTv(false) end
+        end
+    end)
+  ''
   + launcherBinds
   + optionalString (autostart != [ ]) ''
 
@@ -149,6 +184,20 @@ in
         defaultText = literalExpression "pkgs.quickshell";
         description = "Quickshell package.";
       };
+    };
+
+    hdrApps = mkOption {
+      type = types.listOf types.str;
+      default = [ ];
+      example = [ "moonlight" ];
+      description = ''
+        Case-insensitive substrings matched against window classes. While a
+        matching window is open the TV runs in HDR (`cm = "hdr"`, 10-bit),
+        and goes back to SDR when the last one closes. For apps that send
+        HDR but don't signal it to Hyprland, so its own auto-HDR
+        (render:cm_auto_hdr) never kicks in. Each switch makes the TV drop
+        and re-add itself, which the quickshell windows follow.
+      '';
     };
 
     fullscreenApps = mkOption {

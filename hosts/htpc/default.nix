@@ -42,6 +42,8 @@
       # (fullscreen also hides its GTK title bar)
       # Sober (Roblox) is org.vinegarhq.Sober
       fullscreenApps = [ "moonlight" "open-tv" "StremioLinuxShellEnhanced" "sober" ];
+      # TV in HDR while Moonlight is open: HDR streams from Sunshine
+      hdrApps = [ "moonlight" ];
       # the TV UI (files/quickshell): home screen, ribbon, launcher, settings
       shell.enable = true;
     };
