@@ -85,6 +85,8 @@
     gaming = {
       steam.enable = true;
       moonlight.enable = true; # streams from Sunshine on Balthasar
+      # hold Home on the remote: quit the game on Balthasar, close Moonlight
+      moonlight.host = "192.168.50.134";
       heroic.enable = true;
       lutris.enable = true;
     };
