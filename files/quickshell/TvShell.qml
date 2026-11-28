@@ -30,70 +30,81 @@ Scope {
     }
     onHdrAppOpenChanged: Quickshell.execDetached(["htpc-tv-hdr", hdrAppOpen ? "on" : "off"])
 
-    PanelWindow {
-        // Follow the TV across hotplugs: HDR/mode switches (Moonlight) make
-        // Hyprland drop and re-add it, and an unbound window dies with the
-        // old screen (home screen gone after Moonlight, 2026-11-27).
-        screen: Quickshell.screens.length > 0 ? Quickshell.screens[0] : null
-        id: homeWin
-        anchors { top: true; bottom: true; left: true; right: true }
-        exclusionMode: ExclusionMode.Ignore
-        color: Theme.bg
-        WlrLayershell.layer: WlrLayer.Background
-        WlrLayershell.namespace: "htpc-home"
-        WlrLayershell.keyboardFocus: (ShellState.mode === "home" && !ShellState.appOpen)
-            ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
-
-        Binding { target: Theme; property: "s"; value: Math.min(homeWin.width / 1920, homeWin.height / 1080) }
-        Binding { target: Theme; property: "backdrop"; value: scene }
-
-        Item { id: scene; anchors.fill: parent; Backdrop { anchors.fill: parent } }
-
-        Home {
-            id: homeScreen
-            anchors.fill: parent
-            focus: true
-            onSettingsRequested: ShellState.settings()
-            // Search reaches us only when the home screen has focus (no app
-            // covering it); in an app the app gets it. Not a Hyprland bind.
-            Keys.onPressed: event => {
-                if (event.key === Qt.Key_Search) { ShellState.search(); event.accepted = true; }
-            }
+    // The windows, on the TV. Recreated whenever the TV changes: HDR/mode
+    // switches (Moonlight) make Hyprland drop and re-add it, and while it's
+    // gone Qt substitutes an unnamed placeholder screen. Moving the old
+    // windows onto the returning screen didn't reliably work (home screen
+    // black after hotplugs, 2026-11-27 and -28); fresh windows do.
+    Variants {
+        model: {
+            const real = Array.from(Quickshell.screens).filter(s => s.name !== "");
+            return real.length > 0 ? [real[0]] : [];
         }
-        Connections {
-            target: ShellState
-            function onModeChanged() { if (ShellState.mode === "home") homeScreen.forceActiveFocus(); }
-        }
-    }
 
-    PanelWindow {
-        // Follow the TV across hotplugs: HDR/mode switches (Moonlight) make
-        // Hyprland drop and re-add it, and an unbound window dies with the
-        // old screen (home screen gone after Moonlight, 2026-11-27).
-        screen: Quickshell.screens.length > 0 ? Quickshell.screens[0] : null
-        id: overlayWin
-        // mapped while anything is open or still fading out
-        visible: ShellState.mode !== "home" || switcher.opacity > 0 || launcher.opacity > 0 || settings.opacity > 0
-        anchors { top: true; bottom: true; left: true; right: true }
-        exclusionMode: ExclusionMode.Ignore
-        color: "transparent"
-        WlrLayershell.layer: WlrLayer.Overlay
-        WlrLayershell.namespace: "htpc-overlay"
-        WlrLayershell.keyboardFocus: ShellState.mode !== "home" ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+        Scope {
+            id: tvScreen
+            required property var modelData
 
-        FocusScope {
-            anchors.fill: parent
-            focus: true
-            // while an overlay is up: Search toggles the launcher, Back closes
-            Keys.onPressed: event => {
-                if (event.key === Qt.Key_Search) ShellState.search();
-                else if (event.key === Qt.Key_Back || event.key === Qt.Key_Escape) ShellState.back();
-                else return;
-                event.accepted = true;
+            PanelWindow {
+                screen: tvScreen.modelData
+                id: homeWin
+                anchors { top: true; bottom: true; left: true; right: true }
+                exclusionMode: ExclusionMode.Ignore
+                color: Theme.bg
+                WlrLayershell.layer: WlrLayer.Background
+                WlrLayershell.namespace: "htpc-home"
+                WlrLayershell.keyboardFocus: (ShellState.mode === "home" && !ShellState.appOpen)
+                    ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+
+                Binding { target: Theme; property: "s"; value: Math.min(homeWin.width / 1920, homeWin.height / 1080) }
+                Binding { target: Theme; property: "backdrop"; value: scene }
+
+                Item { id: scene; anchors.fill: parent; Backdrop { anchors.fill: parent } }
+
+                Home {
+                    id: homeScreen
+                    anchors.fill: parent
+                    focus: true
+                    onSettingsRequested: ShellState.settings()
+                    // Search reaches us only when the home screen has focus (no app
+                    // covering it); in an app the app gets it. Not a Hyprland bind.
+                    Keys.onPressed: event => {
+                        if (event.key === Qt.Key_Search) { ShellState.search(); event.accepted = true; }
+                    }
+                }
+                Connections {
+                    target: ShellState
+                    function onModeChanged() { if (ShellState.mode === "home") homeScreen.forceActiveFocus(); }
+                }
             }
-            RibbonOverlay { id: switcher; anchors.fill: parent; glassBackdrop: null; open: ShellState.mode === "switcher"; onCloseRequested: ShellState.back() }
-            Launcher      { id: launcher; anchors.fill: parent; glassBackdrop: null; open: ShellState.mode === "launcher"; onCloseRequested: ShellState.back() }
-            SettingsPanel { id: settings; anchors.fill: parent; glassBackdrop: null; open: ShellState.mode === "settings"; onCloseRequested: ShellState.back() }
+
+            PanelWindow {
+                screen: tvScreen.modelData
+                id: overlayWin
+                // mapped while anything is open or still fading out
+                visible: ShellState.mode !== "home" || switcher.opacity > 0 || launcher.opacity > 0 || settings.opacity > 0
+                anchors { top: true; bottom: true; left: true; right: true }
+                exclusionMode: ExclusionMode.Ignore
+                color: "transparent"
+                WlrLayershell.layer: WlrLayer.Overlay
+                WlrLayershell.namespace: "htpc-overlay"
+                WlrLayershell.keyboardFocus: ShellState.mode !== "home" ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+
+                FocusScope {
+                    anchors.fill: parent
+                    focus: true
+                    // while an overlay is up: Search toggles the launcher, Back closes
+                    Keys.onPressed: event => {
+                        if (event.key === Qt.Key_Search) ShellState.search();
+                        else if (event.key === Qt.Key_Back || event.key === Qt.Key_Escape) ShellState.back();
+                        else return;
+                        event.accepted = true;
+                    }
+                    RibbonOverlay { id: switcher; anchors.fill: parent; glassBackdrop: null; open: ShellState.mode === "switcher"; onCloseRequested: ShellState.back() }
+                    Launcher      { id: launcher; anchors.fill: parent; glassBackdrop: null; open: ShellState.mode === "launcher"; onCloseRequested: ShellState.back() }
+                    SettingsPanel { id: settings; anchors.fill: parent; glassBackdrop: null; open: ShellState.mode === "settings"; onCloseRequested: ShellState.back() }
+                }
+            }
         }
     }
 }
